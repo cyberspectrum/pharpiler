@@ -1,0 +1,63 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * This file is part of cyberspectrum/pharpiler.
+ *
+ * (c) Christian Schiffler <c.schiffler@cyberspectrum.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * This project is provided in good faith and hope to be usable by anyone.
+ *
+ * @package    cyberspectrum/pharpiler
+ * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @copyright  2015 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @license    https://github.com/cyberspectrum/pharpiler/blob/master/LICENSE MIT
+ * @link       https://github.com/cyberspectrum/pharpiler
+ * @filesource
+ */
+
+use CyberSpectrum\PharPiler\CompileCommand;
+use Symfony\Component\Console\Application;
+
+set_time_limit(0);
+
+require_once __DIR__.'/../vendor/autoload.php';
+
+if (function_exists('ini_set')) {
+    ini_set('display_errors', 1);
+
+    $memoryInBytes = function ($value) {
+        $unit  = strtolower(substr($value, -1, 1));
+        $value = (int) $value;
+        switch ($unit) {
+            case 'g':
+                $value *= 1024;
+            // no break (cumulative multiplier)
+            case 'm':
+                $value *= 1024;
+            // no break (cumulative multiplier)
+            case 'k':
+                $value *= 1024;
+                break;
+            default:
+        }
+
+        return $value;
+    };
+
+    $memoryLimit = trim(ini_get('memory_limit'));
+    // Increase memory_limit if it is lower than 512M
+    if (($memoryLimit != -1) && ($memoryInBytes($memoryLimit) < 512 * 1024 * 1024)) {
+        // @codingStandardsIgnoreStart
+        @ini_set('memory_limit', '512M');
+        // @codingStandardsIgnoreEnd
+    }
+    unset($memoryInBytes, $memoryLimit);
+}
+
+$application = new Application('pharpiler', '@@PHARPILER_VERSION@@');
+$application->add(new CompileCommand());
+$application->run();
