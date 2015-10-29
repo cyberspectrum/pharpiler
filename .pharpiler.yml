@@ -1,0 +1,64 @@
+phar: pharpiler.phar
+
+tasks:
+  - type: run-process
+    command: composer update
+
+  - type: add-package
+    name: cyberspectrum/pharpiler
+#    include_require: true
+#    include_requiredev: false
+    exclude_dependencies:
+#      - phpcq/all-tasks
+    include_files: &default_include_files
+      - "*.php"
+      - "(LICENSE\\.?.*)"
+    exclude_files: &default_exclude_files
+      - "(.*[Tt]ests?\/)"
+      - "*tests/*.php"
+    package_override:
+      cyberspectrum/pharpiler:
+        include_files:
+          - *default_include_files
+          - "%package:cyberspectrum/pharpiler%/bin/pharpiler"
+        exclude_files:
+          - *default_exclude_files
+          - "*/phar/*"
+        rewrite_paths:
+          src: /src
+      symfony/console:
+        exclude_files:
+          - *default_exclude_files
+          - "(Tester\/)"
+
+  - type: set-stub
+    stub_file: %package:cyberspectrum/pharpiler%/phar/stub.php
+
+  - type: composer-autoload
+    optimize: true
+
+rewrites:
+  - files:
+      - %package:cyberspectrum/pharpiler%/phar/stub.php
+      - %package:cyberspectrum/pharpiler%/bin/pharpiler
+    filter:
+      - type: replace
+        @@MIN_PHP_VERSION@@: "5.4"
+      - type: replace
+        @@PHARPILER_VERSION@@: %version:cyberspectrum/pharpiler%
+      - type: warning-time
+        search: // @@DEV_WARNING_TIME@@
+        format: define('DEV_WARNING_TIME', @@warning_time@@);
+        # 30 * 86400 = 2592000
+        ahead: 2592000
+
+  - files:
+      - %package:cyberspectrum/pharpiler%/bin/pharpiler
+    filter:
+      - type: replace
+        "#!/usr/bin/env php\n": ""
+
+  # keep this last
+  - files: "*.php"
+    filter:
+      - type: php-strip
