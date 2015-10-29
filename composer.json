@@ -1,0 +1,32 @@
+{
+  "name": "cyberspectrum/pharpiler",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": ">=5.4",
+    "psr/log": "~1.0",
+    "seld/phar-utils": "~1.0",
+    "symfony/config": "~2.7",
+    "symfony/console": "~2.7",
+    "symfony/finder": "~2.8@dev",
+    "symfony/dependency-injection": "~2.7",
+    "symfony/process": "~2.7",
+    "symfony/yaml": "~2.7"
+  },
+  "require-dev": {
+    "phpcq/all-tasks": "~1.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "CyberSpectrum\\PharPiler\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "CyberSpectrum\\PharPiler\\Tests\\": "tests"
+    }
+  },
+  "bin": ["bin/pharpiler"],
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
