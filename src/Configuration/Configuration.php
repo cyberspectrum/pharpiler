@@ -80,7 +80,9 @@ class Configuration implements ConfigurationInterface
                         ->always(function ($value) {
                             // We should mark here which values are mandatory for each task type and check the content.
                             return $value;
-                        });
+                        })
+                    ->end()
+                    ->children();
 
         /** @var NodeBuilder $tasks */
         $tasks
