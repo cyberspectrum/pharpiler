@@ -1,9 +1,6 @@
 phar: pharpiler.phar
 
 tasks:
-  - type: run-process
-    command: composer update
-
   - type: add-package
     name: cyberspectrum/pharpiler
 #    include_require: true
