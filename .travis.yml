@@ -14,7 +14,7 @@ install:
 
 script:
   - ant -keep-going
-  -
+  - test-compile.sh
 
 # Hack to make things work again - we can not use a shallow repository.
 git:
