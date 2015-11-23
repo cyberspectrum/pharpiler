@@ -22,16 +22,22 @@ namespace CyberSpectrum\PharPiler;
 
 use CyberSpectrum\PharPiler\Phar\FileEntry;
 use CyberSpectrum\PharPiler\Phar\Pharchive;
-use Iterator;
 
 /**
  * This class mimics the base \Phar class with neat operations.
  */
 class Phar
 {
+    /**
+     * The file name.
+     *
+     * @var string
+     */
     private $fname;
 
     /**
+     * The filter handler to use.
+     *
      * @var Filter
      */
     private $filters;
@@ -46,14 +52,14 @@ class Phar
     /**
      * Construct a Phar archive object
      *
-     * @link http://php.net/manual/en/phar.construct.php
-     *
      * @param string $fname   Path to an existing Phar archive or to-be-created archive. The file name's extension must
      *                        contain .phar.
      *
      * @param Filter $filters The filters to apply to the files being added.
      *
      * @param string $alias   Alias with which this Phar archive should be referred to in calls to stream functionality.
+     *
+     * @link http://php.net/manual/en/phar.construct.php
      */
     public function __construct($fname, Filter $filters = null, $alias = null)
     {
@@ -80,7 +86,7 @@ class Phar
      *
      * @param string $stubFile Full or relative path to a file on disk to be added to the phar archive.
      *
-     * @return bool
+     * @return void
      */
     public function setStubFromFileFiltered($stubFile)
     {
@@ -90,23 +96,27 @@ class Phar
     /**
      * Add a file from the filesystem to the phar archive.
      *
-     * @param string $file Full or relative path to a file on disk to be added to the phar archive.
+     * @param string $file      Full or relative path to a file on disk to be added to the phar archive.
      *
-     * @param string $localname Path that the file will be stored in the archive.
+     * @param string $localName Path that the file will be stored in the archive.
      *
      * @return void
+     *
+     * @throws \LogicException When no filters are present.
+     *
+     * @throws \InvalidArgumentException When the source file could not be found.
      */
-    public function addFileFiltered($file, $localname = null)
+    public function addFileFiltered($file, $localName = null)
     {
         if (!isset($this->filters)) {
-            throw new \RuntimeException('No filters available.');
+            throw new \LogicException('No filters available.');
         }
 
         if (!is_file($file)) {
             throw new \InvalidArgumentException('File not found ' . $file);
         }
 
-        $this->addFromString($localname ?: $file, $this->filters->process($file, file_get_contents($file)));
+        $this->addFromString($localName ?: $file, $this->filters->process($file, file_get_contents($file)));
     }
 
     /**
@@ -117,11 +127,13 @@ class Phar
      * @param string $content   The file content.
      *
      * @return void
+     *
+     * @throws \LogicException When no filters are present.
      */
     public function addFromStringFiltered($localPath, $content)
     {
         if (!isset($this->filters)) {
-            throw new \RuntimeException('No filters available.');
+            throw new \LogicException('No filters available.');
         }
 
         $this->addFromString($localPath, $this->filters->process($localPath, $content));
@@ -134,27 +146,29 @@ class Phar
      */
     public function getFileList()
     {
-        return array_map(function($file) { return $file->getFilename(); }, $this->pharchive->getFiles());
+        return array_map(
+            function (FileEntry $file) {
+                return $file->getFilename();
+            },
+            $this->pharchive->getFiles()
+        );
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public function addEmptyDir($dirname)
-    {
-        // FIXME: not implemented.
-        parent::addEmptyDir($dirname);
-    }
-
-    /**
+     * Add a file to the phar.
+     *
+     * @param string      $file      The path to the file.
+     *
+     * @param null|string $localName The local name of the file to use.
+     *
      * @return FileEntry
      */
-    public function addFile($file, $localname = null)
+    public function addFile($file, $localName = null)
     {
         $add = new FileEntry();
         $add
             ->setContent(file_get_contents($file))
-            ->setFilename($localname);
+            ->setFilename($localName);
 
         $this->pharchive->addFile($add);
 
@@ -162,14 +176,20 @@ class Phar
     }
 
     /**
+     * Add a file from the passed string.
+     *
+     * @param string $localName The local name of the file.
+     *
+     * @param string $contents  The file contents to use.
+     *
      * @return FileEntry
      */
-    public function addFromString($localname, $contents)
+    public function addFromString($localName, $contents)
     {
         $add = new FileEntry();
         $add
             ->setContent($contents)
-            ->setFilename($localname);
+            ->setFilename($localName);
 
         $this->pharchive->addFile($add);
 
@@ -177,24 +197,33 @@ class Phar
     }
 
     /**
-     * {@inheritDoc}
+     * Delete a file.
+     *
+     * @param string $localName The local name of the file.
+     *
+     * @return void
      */
-    public function delete($entry)
+    public function delete($localName)
     {
-        foreach ($this->files as $key => $file) {
-            if ($entry === $file) {
-                unset($this->files[$key]);
+        foreach ($this->pharchive->getFiles() as $file) {
+            if ($localName === $file->getFilename()) {
+                $this->pharchive->removeFile($file);
                 break;
             }
         }
-
-        parent::delete($entry);
     }
 
-    public function compressFiles($algo)
+    /**
+     * Compress all files using the passed algorithm.
+     *
+     * @param int $algorithm The algoithm to use (either \Phar::GZ or \Phar::BZ2).
+     *
+     * @return void
+     */
+    public function compressFiles($algorithm)
     {
         foreach ($this->pharchive->getFiles() as $file) {
-            $file->setCompression($algo);
+            $file->setCompression($algorithm);
         }
     }
 }

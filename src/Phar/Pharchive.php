@@ -23,7 +23,8 @@ namespace CyberSpectrum\PharPiler\Phar;
 /**
  * This class is the real abstraction over the phar.
  */
-class Pharchive {
+class Pharchive
+{
     /**
      * The alias.
      *
@@ -254,7 +255,7 @@ class Pharchive {
      */
     public function getFiles()
     {
-       return array_values($this->files);
+        return array_values($this->files);
     }
 
     /**
@@ -319,6 +320,9 @@ class Pharchive {
      * Determine the type of the signature and return the hash algorithm to use.
      *
      * @return string
+     *
+     * @throws \RuntimeException When the phar is not signed.
+     * @throws \RuntimeException When the signature flags are not understood.
      */
     public function getSignatureAlgorithm()
     {
@@ -344,6 +348,7 @@ class Pharchive {
                 // SHA512 signature (introduced with API version 1.1.0).
                 $this->checkHashApiVersion('sha512', '1.1.0');
                 return 'sha512';
+            default:
         }
 
         throw new \RuntimeException('Unknown signature algorithm in flags ' . dechex($this->signatureFlags));
@@ -353,6 +358,9 @@ class Pharchive {
      * Determine the length of the signature.
      *
      * @return int
+     *
+     * @throws \RuntimeException When the phar is not signed.
+     * @throws \RuntimeException When the signature flags are not understood.
      */
     public function getSignatureLength()
     {
@@ -370,7 +378,7 @@ class Pharchive {
                 return 20;
 
             case \Phar::SHA256:
-                // SHA256 signature (introduced with API version 1.1.0$).
+                // SHA256 signature (introduced with API version 1.1.0).
                 $this->checkHashApiVersion('sha256', '1.1.0');
                 return 32;
 
@@ -378,6 +386,7 @@ class Pharchive {
                 // SHA512 signature (introduced with API version 1.1.0).
                 $this->checkHashApiVersion('sha512', '1.1.0');
                 return 64;
+            default:
         }
 
         throw new \RuntimeException('Unknown signature algorithm in flags ' . dechex($this->signatureFlags));
@@ -386,7 +395,13 @@ class Pharchive {
     /**
      * Check that the API version matches against the minimum version.
      *
+     * @param string $hash    The hash algorithm name.
+     *
+     * @param string $version The api version where the algorithm got introduced.
+     *
      * @return void
+     *
+     * @throws \RuntimeException When the current api version is lower than the introducing api version.
      */
     private function checkHashApiVersion($hash, $version)
     {
@@ -394,9 +409,10 @@ class Pharchive {
         if (version_compare($apiVersion, $version, '<')) {
             throw new \RuntimeException(
                 sprintf(
-                    'Phar API version is %s but phar indicates to be signed with %s which got introduced in 1.1.0.',
+                    'Phar API version is %s but phar indicates to be signed with %s which got introduced in %s.',
                     $apiVersion,
-                    $hash
+                    $hash,
+                    $version
                 )
             );
         }
@@ -408,6 +424,12 @@ class Pharchive {
      * @param array|string $version The version either as 3-element array or dot separated string.
      *
      * @return int
+     *
+     * @throws \RuntimeException When the version string could not be parsed.
+     *
+     * @throws \RuntimeException When the version is neither array nor string.
+     *
+     * @throws \OutOfBoundsException When the version field is not between 0 and 15.
      */
     private function encodePharVersion($version)
     {
@@ -432,10 +454,10 @@ class Pharchive {
                 throw new \OutOfBoundsException('Invalid version field ' . $nibble . ' must be between 0 and 15');
             }
 
-          return $nibble;
+            return $nibble;
         }, $version);
 
-        return ($nibbles[2]<<4) | ($nibbles[1] << 8) | ($nibbles[0] << 12);
+        return (($nibbles[2] << 4) | ($nibbles[1] << 8) | ($nibbles[0] << 12));
     }
 
     /**
@@ -447,9 +469,9 @@ class Pharchive {
      */
     private function decodePharVersion($version)
     {
-        $nibbles[0] = ($version >> 12) & 0xF;
-        $nibbles[1] = ($version >> 8) & 0xF;
-        $nibbles[2] = ($version >> 4) & 0xF;
+        $nibbles[0] = (($version >> 12) & 0xF);
+        $nibbles[1] = (($version >> 8) & 0xF);
+        $nibbles[2] = (($version >> 4) & 0xF);
 
         return implode('.', $nibbles);
     }

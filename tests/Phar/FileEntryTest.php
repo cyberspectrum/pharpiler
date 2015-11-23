@@ -22,8 +22,16 @@ namespace CyberSpectrum\PharPiler\Tests\Phar;
 
 use CyberSpectrum\PharPiler\Phar\FileEntry;
 
-class AddPackageTaskTest extends \PHPUnit_Framework_TestCase
+/**
+ * This class tests the FileEntry class.
+ */
+class FileEntryTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * Provider method for the testPermissionParsing() method.
+     *
+     * @return array
+     */
     public function permissionNumberProvider()
     {
         return [
@@ -39,7 +47,7 @@ class AddPackageTaskTest extends \PHPUnit_Framework_TestCase
      *
      * @param string $expects The expected value.
      *
-     * @param mixed $value    The value to set.
+     * @param mixed  $value   The value to set.
      *
      * @return void
      *
@@ -52,6 +60,4 @@ class AddPackageTaskTest extends \PHPUnit_Framework_TestCase
         $phar->setPermissions($value);
         $this->assertEquals($expects, $phar->getPermissionString());
     }
-
-
 }

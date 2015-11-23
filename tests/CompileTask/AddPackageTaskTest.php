@@ -18,7 +18,7 @@
  * @filesource
  */
 
-namespace CyberSpectrum\PharPiler\Tests\Tasks;
+namespace CyberSpectrum\PharPiler\Tests\CompileTask;
 
 
 class AddPackageTaskTest extends \PHPUnit_Framework_TestCase

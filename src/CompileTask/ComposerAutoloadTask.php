@@ -77,11 +77,17 @@ class ComposerAutoloadTask extends AbstractTask
         foreach ($finder->files()->in($root . '/vendor/composer')->name('*.php')->depth('0') as $filename) {
             /** @var \SplFileInfo $filename */
             $path = '/vendor/composer/' . $filename->getFilename();
-            $this->debug('Adding file <comment>' . $path . '</comment> (' . MiscUtils::formatFileSize(filesize($root . $path)) . ')');
-            $phar->addFileFiltered($root . $path,  $path);
+            $this->debug(
+                sprintf(
+                    'Adding file <comment>%s</comment> (%s)',
+                    $path,
+                    MiscUtils::formatFileSize(filesize($root . $path))
+                )
+            );
+            $phar->addFileFiltered($root . $path, $path);
         }
 
-        $phar->addFileFiltered($root . '/vendor/autoload.php',  '/vendor/autoload.php');
+        $phar->addFileFiltered($root . '/vendor/autoload.php', '/vendor/autoload.php');
     }
 
     /**
@@ -97,7 +103,12 @@ class ComposerAutoloadTask extends AbstractTask
 
         $root = $project->getComposer()->getPackageDirectory($project->getComposer()->getRootPackageName());
 
-        $this->debug('Adding file <comment>/vendor/composer/ClassLoader.php</comment> (' . MiscUtils::formatFileSize(filesize($root . '/vendor/composer/ClassLoader.php')) . ')');
+        $this->debug(
+            sprintf(
+                'Adding file <comment>/vendor/composer/ClassLoader.php</comment> (%s)',
+                MiscUtils::formatFileSize(filesize($root . '/vendor/composer/ClassLoader.php'))
+            )
+        );
 
         $phar = $project->getPhar();
         $phar->addFileFiltered($root . '/vendor/composer/ClassLoader.php', '/vendor/composer/ClassLoader.php');

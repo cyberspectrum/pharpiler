@@ -35,6 +35,8 @@ class PharReader
     private $file;
 
     /**
+     * The pharchive instance to work on.
+     *
      * @var Pharchive
      */
     private $phar;
@@ -47,6 +49,8 @@ class PharReader
     private $binOffset;
 
     /**
+     * The amount of files.
+     *
      * @var int
      */
     private $numFiles;
@@ -84,30 +88,22 @@ class PharReader
      *
      * @return void
      *
-     * @throws \RuntimeException When the stub is invalid.
+     * @throws \RuntimeException When the manifest is larger than 100MB (hardcoded limit in PHP).
+     *
+     * @throws \UnexpectedValueException When the manifest header is truncated.
+     *
+     * @throws \RuntimeException When the API version is not understood.
+     *
+     * @throws \UnexpectedValueException When the file length is smaller than the offset of the file contents.
      */
     private function readHead()
     {
-        $buffer = '';
-        do {
-            if ('' === ($chunk = $this->file->read(1024, true))) {
-                throw new \RuntimeException('Could not detect the stub\'s end in the phar');
-            }
-            $buffer .= $chunk;
-            unset($chunk);
-        } while (!preg_match('{__HALT_COMPILER\(\);(?: \?>)?\r?\n}', $buffer, $match, PREG_OFFSET_CAPTURE));
-
-        // detect manifest offset / end of stub
-        $stubEnd = $match[0][1] + strlen($match[0][0]);
-        $this->file->seek($stubEnd);
-        $this->phar->setStub(substr($buffer, 0, $stubEnd));
-        unset($buffer);
-        unset($match);
+        $this->detectStub();
 
         // Check header.
         $manifestLength = $this->file->readUint32le();
 
-        if ($manifestLength > 1048576 * 100) {
+        if ($manifestLength > (1048576 * 100)) {
             // Prevent serious memory issues by limiting manifest to at most 100 MB in length.
             // See also: https://github.com/php/php-src/blob/12ff95/ext/phar/phar.c#L719
             throw new \RuntimeException('manifest cannot be larger than 100 MB');
@@ -127,9 +123,9 @@ class PharReader
             throw new \RuntimeException(
                 sprintf(
                     'Unable to process phar file, unsupported API version ',
-                    $apiVersion >> 12,
-                    ($apiVersion >> 8) & 0xF,
-                    ($apiVersion >> 4) & 0x0F
+                    ($apiVersion >> 12),
+                    (($apiVersion >> 8) & 0xF),
+                    (($apiVersion >> 4) & 0x0F)
                 )
             );
         }
@@ -143,14 +139,44 @@ class PharReader
             $this->phar->setMetadata(unserialize($this->file->read($metadataLength)));
         }
 
-        $this->binOffset = $stubEnd + $manifestLength + 4;
+        $this->binOffset = (strlen($this->phar->getStub()) + $manifestLength + 4);
 
-        $fileLength = $this->file->getLength();
         if ($this->file->getLength() < $this->binOffset) {
             throw new \UnexpectedValueException('internal corruption of phar (truncated manifest header)');
         }
     }
 
+    /**
+     * Detect the stub and set it in the pharchive instance.
+     *
+     * @return void
+     *
+     * @throws \RuntimeException When the stub is invalid.
+     */
+    private function detectStub()
+    {
+        $buffer = '';
+        do {
+            if ('' === ($chunk = $this->file->read(1024, true))) {
+                throw new \RuntimeException('Could not detect the stub\'s end in the phar');
+            }
+            $buffer .= $chunk;
+            unset($chunk);
+        } while (!preg_match('{__HALT_COMPILER\(\);(?: \?>)?\r?\n}', $buffer, $match, PREG_OFFSET_CAPTURE));
+
+        // detect manifest offset / end of stub
+        $stubEnd = ($match[0][1] + strlen($match[0][0]));
+        $this->file->seek($stubEnd);
+        $this->phar->setStub(substr($buffer, 0, $stubEnd));
+    }
+
+    /**
+     * Check the signature of the phar file.
+     *
+     * @return void
+     *
+     * @throws \RuntimeException When the signature is invalid.
+     */
     private function checkSignature()
     {
         // Validate the signature if any.
@@ -167,11 +193,11 @@ class PharReader
         }
 
         $this->phar->setSignatureFlags($this->file->seek(-8, SEEK_END)->readUint32le());
-        $algorithm = $this->phar->getSignatureAlgorithm();
-        $length    = $this->phar->getSignatureLength();
-        $signature = $this->file->seek(-($length + 8), SEEK_END)->read($length);
+        $algorithm  = $this->phar->getSignatureAlgorithm();
+        $length     = $this->phar->getSignatureLength();
+        $signature  = $this->file->seek(-($length + 8), SEEK_END)->read($length);
         $dataLength = $this->file->getLength();
-        $data = $this->file->seek(0)->read($dataLength - ($length + 8));
+        $data       = $this->file->seek(0)->read($dataLength - ($length + 8));
 
         // Now validate the signature.
         if (hash($algorithm, $data, true) !== $signature) {
@@ -185,9 +211,11 @@ class PharReader
     /**
      * Read a file entry from the file.
      *
-     * @param $fileBinaryOffset
+     * @param int $fileBinaryOffset The offset in the file to start reading from.
      *
      * @return FileEntry
+     *
+     * @throws \RuntimeException When the file name length in the dictionary is zero (corrupted dictionary).
      */
     private function readFile($fileBinaryOffset)
     {

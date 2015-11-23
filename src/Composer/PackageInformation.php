@@ -22,6 +22,9 @@ namespace CyberSpectrum\PharPiler\Composer;
 
 use Symfony\Component\Process\Process;
 
+/**
+ * This class holds basic information about a composer package.
+ */
 class PackageInformation
 {
     /**
@@ -55,9 +58,13 @@ class PackageInformation
     /**
      * Create a new instance.
      *
-     * @param string $name The name.
+     * @param string $name        The name.
      *
-     * @param string $data The package data.
+     * @param string $data        The package data.
+     *
+     * @param string $installRoot The path to the composer project root dir.
+     *
+     * @param bool   $isRoot      Boolean flag if the package is the root package.
      */
     public function __construct($name, $data, $installRoot, $isRoot = false)
     {
@@ -88,6 +95,8 @@ class PackageInformation
      * This retrieves the version.
      *
      * @return string
+     *
+     * @throws \LogicException When the package version can not be determined.
      */
     public function getVersion()
     {
@@ -129,7 +138,7 @@ class PackageInformation
      */
     public function getType()
     {
-        if (($this->name === 'php') || (substr($this->name, 0 , 4) === 'ext-')) {
+        if (($this->name === 'php') || (substr($this->name, 0, 4) === 'ext-')) {
             return 'platform';
         }
 
@@ -143,7 +152,7 @@ class PackageInformation
     /**
      * Retrieve the dependencies of a package.
      *
-     * @param string[]    $ignorePackages The names of packages that shall be ignored.
+     * @param string[] $ignorePackages The names of packages that shall be ignored.
      *
      * @return string[]
      */
@@ -233,7 +242,9 @@ class PackageInformation
     /**
      * Ensure this is a proper version.
      *
-     * @param string $version The version that might contain "self.version".
+     * @param string $version  The version that might contain "self.version".
+     *
+     * @param string $fallback The fallback version to return when the real version is "self.version".
      *
      * @return string
      */

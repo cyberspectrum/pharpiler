@@ -26,16 +26,22 @@ namespace CyberSpectrum\PharPiler\Phar;
 class PharWriter
 {
     /**
+     * The pharchive to work on.
+     *
      * @var Pharchive
      */
     private $phar;
 
     /**
+     * The stream writer in use for the phar file.
+     *
      * @var StreamWriter
      */
     private $file;
 
     /**
+     * The stream writer to use for the binary data.
+     *
      * @var StreamWriter
      */
     private $bins;
@@ -48,6 +54,8 @@ class PharWriter
      * @param string    $filename The file name to write to.
      *
      * @return void
+     *
+     * @throws \RuntimeException When the stub is illegal.
      */
     public function save($phar, $filename)
     {
@@ -61,7 +69,7 @@ class PharWriter
             throw new \RuntimeException('Illegal stub');
         }
         // Mimic plain PHP phar writing, it adds the closing tag.
-        $this->file->write(substr($stub, 0, $pos + 18) . " ?>\r\n");
+        $this->file->write(substr($stub, 0, ($pos + 18)) . " ?>\r\n");
 
         $this->buildManifest();
         $this->file->writeStream($this->bins->seek(0));
@@ -106,8 +114,7 @@ class PharWriter
             ->writeUint32le(strlen($alias))
             ->write($alias)
             ->writeUint32le(strlen($metaData))
-            ->write($metaData)
-        ;
+            ->write($metaData);
 
         // Add files now.
         foreach ($files as $file) {

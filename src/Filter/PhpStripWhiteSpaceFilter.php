@@ -56,5 +56,4 @@ class PhpStripWhiteSpaceFilter extends AbstractFilter
 
         return $output;
     }
-
 }

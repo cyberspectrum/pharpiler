@@ -33,6 +33,8 @@ class StreamWriter extends StreamReader
      * @param int|null $bytes  The amount of bytes to write.
      *
      * @return StreamWriter
+     *
+     * @throws \RuntimeException When not all bytes could be written to the file.
      */
     public function write($string, $bytes = null)
     {

@@ -23,7 +23,8 @@ namespace CyberSpectrum\PharPiler\Phar;
 /**
  * This class is the abstraction over phar file entries.
  */
-class FileEntry {
+class FileEntry
+{
     /**
      * The filename.
      *
@@ -44,7 +45,7 @@ class FileEntry {
     private $flags;
 
     /**
-     * The metadata
+     * The meta data or null when no meta data present.
      *
      * @var array|null
      */
@@ -104,7 +105,27 @@ class FileEntry {
     /**
      * Create a new instance with values originating from a phar archive.
      *
+     * @param string     $filename             The filename.
+     *
+     * @param int        $fileSizeUncompressed The uncompressed file size.
+     *
+     * @param int        $fileSizeCompressed   The compressed file size.
+     *
+     * @param \DateTime  $timestamp            The timestamp.
+     *
+     * @param string     $crc                  The crc32 hash.
+     *
+     * @param int        $flags                The file flags.
+     *
+     * @param array|null $metadata             The meta data or null when no meta data present.
+     *
+     * @param string     $content              The file content (compressed or uncompressed according to flags).
+     *
      * @return FileEntry
+     *
+     * @throws \RuntimeException Whrn the CRC is invalid.
+     *
+     * @throws \RuntimeException When the real file size does not match the passed file size.
      */
     public static function createFromPhar(
         $filename,
@@ -116,7 +137,7 @@ class FileEntry {
         $metadata,
         $content
     ) {
-        $instance = new static();
+        $instance                   = new static();
         $instance->filename         = $filename;
         $instance->sizeUncompressed = $fileSizeUncompressed;
         $instance->sizeCompressed   = $fileSizeCompressed;
@@ -128,7 +149,7 @@ class FileEntry {
 
         if ($instance->getCompression() === \Phar::NONE) {
             $instance->uncompressedContent = $content;
-            $desiredFileSize = $fileSizeUncompressed;
+            $desiredFileSize               = $fileSizeUncompressed;
 
             // Check the crc now.
             if (crc32($content) !== $crc) {
@@ -209,7 +230,7 @@ class FileEntry {
      */
     public function setPermissions($permissions)
     {
-        $this->flags = ($this->flags & 0xFFFFFE00) | ($permissions & 0x000001FF);
+        $this->flags = (($this->flags & 0xFFFFFE00) | ($permissions & 0x000001FF));
 
         return $this;
     }
@@ -221,7 +242,7 @@ class FileEntry {
      */
     public function getPermissions()
     {
-        return $this->flags & 0x000001FF;
+        return ($this->flags & 0x000001FF);
     }
 
     /**
@@ -257,7 +278,11 @@ class FileEntry {
     /**
      * Set the compression flag.
      *
+     * @param int $flag The flag to set.
+     *
      * @return void
+     *
+     * @throws \InvalidArgumentException When the compression flag does match neither \Phar::GZ nor \Phar::BZ2.
      */
     public function setCompression($flag)
     {
@@ -265,7 +290,7 @@ class FileEntry {
             throw new \InvalidArgumentException('Invalid compression value passed.');
         }
 
-        $this->flags &= $flag | 0xFFFFCFFF;
+        $this->flags &= ($flag | 0xFFFFCFFF);
     }
 
     /**
@@ -279,8 +304,8 @@ class FileEntry {
 
         return
             $this->decodePermissionNibble(($permissions & 0xF)) .
-            $this->decodePermissionNibble((($permissions>>3) & 0xF)) .
-            $this->decodePermissionNibble((($permissions>>6) & 0xF));
+            $this->decodePermissionNibble((($permissions >> 3) & 0xF)) .
+            $this->decodePermissionNibble((($permissions >> 6) & 0xF));
     }
 
     /**
@@ -345,6 +370,10 @@ class FileEntry {
      * Retrieve the uncompressed file content.
      *
      * @return string
+     *
+     * @throws \LogicException When the Compression algorithm is invalid.
+     *
+     * @throws \RuntimeException When the CRC is invalid.
      */
     public function getContent()
     {
@@ -375,6 +404,8 @@ class FileEntry {
      * Retrieve the compressed file content.
      *
      * @return string
+     *
+     * @throws \LogicException When the Compression algorithm is invalid.
      */
     public function getCompressedContent()
     {
@@ -402,14 +433,16 @@ class FileEntry {
     }
 
     /**
-     * Set the new content.
+     * Set the uncompressed content.
+     *
+     * @param string $content The content to use.
      *
      * @return FileEntry
      */
     public function setContent($content)
     {
         $this->uncompressedContent = $content;
-        $this->sizeUncompressed = strlen($content);
+        $this->sizeUncompressed    = strlen($content);
         unset($this->content);
         unset($this->sizeCompressed);
         unset($this->crc);

@@ -59,6 +59,9 @@ class CompileCommand extends Command
      */
     private $tasks;
 
+    /**
+     * {@inheritDoc}
+     */
     protected function configure()
     {
         $this
@@ -111,9 +114,7 @@ class CompileCommand extends Command
         $project->finalize();
         unset($project);
 
-        $this->logger->notice('All done.'); // verbose
-        //$this->logger->info('All done.'); // very verbose
-        //$this->logger->debug('All done.'); // debug
+        $this->logger->notice('All done.');
     }
 
     /**
@@ -167,6 +168,8 @@ class CompileCommand extends Command
      * @param ConfigurationValues $config The configuration values.
      *
      * @return void
+     *
+     * @throws \InvalidArgumentException When an unknown task type has been configured.
      */
     private function buildTasks($config)
     {
@@ -215,7 +218,7 @@ class CompileCommand extends Command
      */
     private function collectParameters(ComposerInformation $information, $baseParameters)
     {
-        $parameterBag  = new ParameterBag($baseParameters);
+        $parameterBag = new ParameterBag($baseParameters);
 
         foreach ($information->getPackageNames() as $packageName) {
             $parameterBag->set(sprintf('package:%s', $packageName), $information->getPackageDirectory($packageName));
@@ -232,6 +235,8 @@ class CompileCommand extends Command
      * @param ConfigurationValues $config The configuration values.
      *
      * @return Filter
+     *
+     * @throws \InvalidArgumentException When an unknown filter type has been configured.
      */
     private function buildFilters($config)
     {

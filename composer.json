@@ -1,9 +1,10 @@
 {
   "name": "cyberspectrum/pharpiler",
+  "description": "Creates a phar from any composer based project - highly configurable",
   "type": "project",
   "license": "MIT",
   "require": {
-    "php": ">=5.4",
+    "php": ">=5.5",
     "psr/log": "~1.0",
     "seld/phar-utils": "~1.0",
     "symfony/config": "~2.7",

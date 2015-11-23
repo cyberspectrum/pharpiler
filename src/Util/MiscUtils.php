@@ -21,10 +21,17 @@
 namespace CyberSpectrum\PharPiler\Util;
 
 /**
- * This class is the abstract base for all compile tasks.
+ * This class provides handy methods for formatting etc.
  */
 class MiscUtils
 {
+    /**
+     * Format a file size.
+     *
+     * @param int $size The file size to format.
+     *
+     * @return string
+     */
     public static function formatFileSize($size)
     {
         $units = ['Byte', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];

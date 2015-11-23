@@ -29,11 +29,15 @@ use Symfony\Component\Finder\Glob;
 class Collection
 {
     /**
+     * The regexps to match.
+     *
      * @var string[]
      */
     private $matchRegexps = [];
 
     /**
+     * The regexps not to match.
+     *
      * @var string[]
      */
     private $noMatchRegexps = [];
@@ -52,7 +56,7 @@ class Collection
      *
      * @param AbstractFilter[] $filters      The filters to apply.
      */
-    public function __construct(array $matchRegexps, array $filters)
+    public function __construct(array $matchRegexps, $filters)
     {
         foreach ($matchRegexps as $pattern) {
             $this->matchRegexps[] = $this->toRegex($pattern);
@@ -64,7 +68,7 @@ class Collection
     /**
      * Check if the regex match against the passed filename.
      *
-     * @param string $file the filename
+     * @param string $file The filename.
      *
      * @return bool
      */
@@ -113,7 +117,7 @@ class Collection
      * PCRE patterns are left unchanged.
      * Glob strings are transformed with Glob::toRegex().
      *
-     * @param string $str Pattern: glob or regexp
+     * @param string $str Pattern: glob or regexp.
      *
      * @return string regexp corresponding to a given glob or regexp
      */
@@ -125,15 +129,15 @@ class Collection
     /**
      * Checks whether the string is a regex.
      *
-     * @param string $str
+     * @param string $str The string to match.
      *
      * @return bool Whether the given string is a regex
      */
     protected function isRegex($str)
     {
-        if (preg_match('/^(.{3,}?)[imsxuADU]*$/', $str, $m)) {
-            $start = substr($m[1], 0, 1);
-            $end = substr($m[1], -1);
+        if (preg_match('/^(.{3,}?)[imsxuADU]*$/', $str, $matches)) {
+            $start = substr($matches[1], 0, 1);
+            $end   = substr($matches[1], -1);
 
             if ($start === $end) {
                 return !preg_match('/[*?[:alnum:] \\\\]/', $start);

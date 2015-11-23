@@ -22,10 +22,14 @@ namespace CyberSpectrum\PharPiler\Phar;
 
 /**
  * This class is a simple file reader.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class StreamReader
 {
     /**
+     * The file resource.
+     *
      * @var resource
      */
     protected $file;
@@ -41,6 +45,8 @@ class StreamReader
      * Create a new instance.
      *
      * @param string $filename The file to read.
+     *
+     * @throws \RuntimeException When the file can not be opened.
      */
     public function __construct($filename)
     {
@@ -54,7 +60,7 @@ class StreamReader
     /**
      * Destroy the instance.
      */
-    function __destruct()
+    public function __destruct()
     {
         fflush($this->file);
         fclose($this->file);
@@ -64,9 +70,15 @@ class StreamReader
     /**
      * Read the given amount of bytes from the stream.
      *
-     * @param int $bytes The amount of bytes to read.
+     * @param int  $bytes     The amount of bytes to read.
+     *
+     * @param bool $allowFail Flag determining if failure to read is allowed. If not, an exception is thrown.
      *
      * @return string
+     *
+     * @throws \InvalidArgumentException When attempting to read zero bytes.
+     *
+     * @throws \LengthException When reading was not successful and $allowFail has not been set.
      */
     public function read($bytes, $allowFail = false)
     {
@@ -123,6 +135,8 @@ class StreamReader
      * Restore the position from the stack.
      *
      * @return StreamReader
+     *
+     * @throws \RuntimeException When the position stack is empty.
      */
     public function loadPosition()
     {
@@ -152,6 +166,8 @@ class StreamReader
      * @param int $whence If whence is not specified, it is assumed to be SEEK_SET.
      *
      * @return StreamReader
+     *
+     * @throws \RuntimeException When the seek was not successful.
      */
     public function seek($offset, $whence = SEEK_SET)
     {
@@ -169,7 +185,7 @@ class StreamReader
      */
     public function tell()
     {
-      return ftell($this->file);
+        return ftell($this->file);
     }
 
     /**
@@ -182,7 +198,7 @@ class StreamReader
         $this->savePosition()->seek(0);
 
         $result = '';
-        while ('' !== ($buffer = $this->read(64*1024, true))) {
+        while ('' !== ($buffer = $this->read((64 * 1024), true))) {
             $result .= $buffer;
         }
 
@@ -211,19 +227,19 @@ class StreamReader
     /**
      * Hash the whole stream from this position on.
      *
-     * @param string $hash The hash algorithm to use.
+     * @param string $hash      The hash algorithm to use.
      *
-     * @param bool $raw_output When set to TRUE, outputs raw binary data. FALSE outputs lowercase hexits.
+     * @param bool   $rawOutput When set to TRUE, outputs raw binary data. FALSE outputs lowercase hexits.
      *
      * @return string
      */
-    public function hashStream($hash, $raw_output = false)
+    public function hashStream($hash, $rawOutput = false)
     {
         $hash = hash_init($hash);
 
         $this->hashUpdate($hash);
 
-        return hash_final($hash, $raw_output);
+        return hash_final($hash, $rawOutput);
     }
 
     /**
@@ -232,6 +248,8 @@ class StreamReader
      * @param resource $context The hash context.
      *
      * @return StreamWriter
+     *
+     * @throws \RuntimeException When the hash could not be updated.
      */
     public function hashUpdate($context)
     {

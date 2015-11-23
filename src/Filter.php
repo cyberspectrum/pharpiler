@@ -28,6 +28,8 @@ use CyberSpectrum\PharPiler\Filter\Collection;
 class Filter
 {
     /**
+     * The filter rule collections.
+     *
      * @var Collection[]
      */
     private $collections;
@@ -37,12 +39,14 @@ class Filter
      *
      * @param Collection[] $collections The filters to apply.
      */
-    public function __construct(array $collections)
+    public function __construct($collections)
     {
         $this->collections = \SplFixedArray::fromArray($collections);
     }
 
     /**
+     * Process the passed file content through the filters.
+     *
      * @param string $fileName The filename to process.
      *
      * @param string $content  The binary file content.
@@ -60,6 +64,3 @@ class Filter
         return $content;
     }
 }
-
-
-

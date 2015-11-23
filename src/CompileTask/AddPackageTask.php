@@ -40,11 +40,15 @@ class AddPackageTask extends AbstractTask
     private $name;
 
     /**
+     * The list of dependencies to be included or bool to include all/no dependencies.
+     *
      * @var bool|string[]
      */
     private $includeRequire;
 
     /**
+     * The list of dependencies from dev section to be included or bool to include all/no dependencies.
+     *
      * @var bool|string[]
      */
     private $includeRequireDev;
@@ -112,8 +116,14 @@ class AddPackageTask extends AbstractTask
                 /** @var SplFileInfo $file */
                 $filePath  = $file->getPathname();
                 $localPath = $this->rewritePath($file->getRelativePathname(), $package, $packageRelative);
+                $this->debug(
+                    sprintf(
+                        'Adding file <comment>%s</comment> (%s)',
+                        $localPath,
+                        MiscUtils::formatFileSize(filesize($filePath))
+                    )
+                );
 
-                $this->debug('Adding file <comment>' . $localPath . '</comment> (' . MiscUtils::formatFileSize(filesize($filePath)) . ')');
                 $phar->addFileFiltered($filePath, $localPath);
             }
         }
@@ -150,9 +160,11 @@ class AddPackageTask extends AbstractTask
     /**
      * Apply path overrides to the passed path.
      *
-     * @param string $path    The path to process.
+     * @param string $path            The path to process.
      *
-     * @param string $package The package name.
+     * @param string $package         The package name.
+     *
+     * @param string $packageRelative The relative path to the package root.
      *
      * @return string
      */
@@ -184,6 +196,8 @@ class AddPackageTask extends AbstractTask
      * @param ComposerInformation $composer The composer information.
      *
      * @return string[]
+     *
+     * @throws \LogicException When require-dev shall get included but the current package is not the root package.
      */
     private function filteredPackages(ComposerInformation $composer)
     {

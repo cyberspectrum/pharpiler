@@ -22,44 +22,63 @@ namespace CyberSpectrum\PharPiler\AutoloadOptimizer;
 
 use Composer\Autoload\ClassLoader;
 
+/**
+ * This class optimizes the information of the composer autoloader for the contents of a phar file.
+ */
 class AutoloadInformationOptimizer
 {
     /**
+     * The list of psr0 autoload information.
+     *
      * @var array
      */
     private $psr0;
 
     /**
+     * The list of psr4 autoload information.
+     *
      * @var array
      */
     private $psr4;
 
     /**
+     * The class maps.
+     *
      * @var string[]
      */
     private $classMap;
 
     /**
+     * The include paths.
+     *
      * @var string[]
      */
     private $includePaths;
 
     /**
+     * The additional autoload files.
+     *
      * @var string[]
      */
     private $autoloadFiles;
 
     /**
+     * The whitelist of classes.
+     *
      * @var string[string]
      */
     private $whitelist;
 
     /**
+     * The root path to strip from file names.
+     *
      * @var string
      */
     private $strip;
 
     /**
+     * The length of the root path to strip.
+     *
      * @var string
      */
     private $stripLength;
@@ -67,13 +86,13 @@ class AutoloadInformationOptimizer
     /**
      * Create a new instance.
      *
-     * @param string[] $whitelist   The file whitelist.
+     * @param string[] $whiteList   The file whitelist.
      *
      * @param string   $projectRoot The composer project root.
      *
      * @return AutoloadInformationOptimizer
      */
-    public static function create($whitelist, $projectRoot)
+    public static function create($whiteList, $projectRoot)
     {
         $vendorDir = $projectRoot . '/vendor';
         /** @var ClassLoader $projectLoader */
@@ -88,7 +107,7 @@ class AutoloadInformationOptimizer
             $projectLoader->getClassMap(),
             (file_exists($file1 = $vendorDir . '/composer/include_paths.php') ? (require $file1) : []),
             (file_exists($file2 = $vendorDir . '/composer/autoload_files.php') ? (require $file2) : []),
-            $whitelist,
+            $whiteList,
             $projectRoot
         );
     }
@@ -96,12 +115,21 @@ class AutoloadInformationOptimizer
     /**
      * Create a new instance.
      *
-     * @param $psr0
-     * @param $psr4
-     * @param $classMap
-     * @param $whitelist
+     * @param array  $psr0          The list of psr0 autoload information.
+     *
+     * @param array  $psr4          The list of psr4 autoload information.
+     *
+     * @param array  $classMap      The list of classmap autoload information.
+     *
+     * @param array  $includePaths  The list of additional include paths.
+     *
+     * @param array  $autoloadFiles The list of additional custom autoload files.
+     *
+     * @param array  $whiteList     The list of whitelisted entries (files embedded into the phar).
+     *
+     * @param string $projectRoot   The project root path.
      */
-    public function __construct($psr0, $psr4, $classMap, $includePaths, $autoloadFiles, $whitelist, $projectRoot)
+    public function __construct($psr0, $psr4, $classMap, $includePaths, $autoloadFiles, $whiteList, $projectRoot)
     {
         $this->psr0          = $psr0;
         $this->psr4          = $psr4;
@@ -111,7 +139,7 @@ class AutoloadInformationOptimizer
         $this->strip         = $projectRoot;
         $this->stripLength   = strlen($this->strip);
 
-        foreach ($whitelist as $entry) {
+        foreach ($whiteList as $entry) {
             if ($entry[0] !== '/') {
                 $entry = '/' . $entry;
             }
@@ -180,7 +208,7 @@ class AutoloadInformationOptimizer
     /**
      * Clean the paths of an autoload array.
      *
-     * @param string[]|array[] $array  The array to clean.
+     * @param string[]|array[] $array The array to clean.
      *
      * @return array
      */
@@ -211,6 +239,13 @@ class AutoloadInformationOptimizer
         return $result;
     }
 
+    /**
+     * Filter the passed path list against the white list.
+     *
+     * @param string[] $paths The paths to filter.
+     *
+     * @return array
+     */
     private function filterPaths($paths)
     {
         $result = [];

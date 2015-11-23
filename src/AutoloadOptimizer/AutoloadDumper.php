@@ -46,7 +46,7 @@ class AutoloadDumper
      */
     public function __construct($optimizer)
     {
-        $this->alias = uniqid();
+        $this->alias     = uniqid();
         $this->optimizer = $optimizer;
     }
 
@@ -123,7 +123,7 @@ INCLUDEPATH;
 
         if ($autoLoadFiles = $this->optimizer->getAutoloadFiles()) {
             foreach ($autoLoadFiles as $autoLoadFile) {
-                $file .= "composerRequire{$this->alias}($autoLoadFile);\n";
+                $file .= sprintf("composerRequire%s(%s);\n", $this->alias, $autoLoadFile);
             }
         }
 

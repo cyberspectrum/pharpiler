@@ -22,7 +22,6 @@ namespace CyberSpectrum\PharPiler;
 
 use CyberSpectrum\PharPiler\Composer\ComposerInformation;
 use CyberSpectrum\PharPiler\Configuration\ConfigurationValues;
-use CyberSpectrum\PharPiler\Phar\PharReader;
 use CyberSpectrum\PharPiler\Phar\PharWriter;
 
 /**
@@ -38,6 +37,8 @@ class Project
     private $phar;
 
     /**
+     * The composer information.
+     *
      * @var ComposerInformation
      */
     private $composer;
@@ -64,6 +65,8 @@ class Project
      * @param Filter              $filters       The filters.
      *
      * @param ComposerInformation $composer      The composer information.
+     *
+     * @throws \RuntimeException When the configured phar file name is invalid.
      */
     public function __construct(ConfigurationValues $configuration, Filter $filters, ComposerInformation $composer)
     {
@@ -79,9 +82,9 @@ class Project
         $this->composer      = $composer;
         $this->configuration = $configuration;
         $this->filters       = $filters;
-        $phar = $this->phar  = new Phar($pharFile, $filters);
-        $phar->getPharchive()->setSignatureFlags(\Phar::MD5);
-        $phar->getPharchive()->setMetadata(
+        $this->phar          = new Phar($pharFile, $filters);
+        $this->phar->getPharchive()->setSignatureFlags(\Phar::MD5);
+        $this->phar->getPharchive()->setMetadata(
             array(
                 'license' => file_get_contents(dirname($pharFile) . '/LICENSE')
             )

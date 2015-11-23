@@ -39,6 +39,8 @@ class SetStubTask extends AbstractTask
      * Create a new instance.
      *
      * @param array $config
+     *
+     * @throws \RuntimeException When the stub file does not exist.
      */
     public function __construct($config)
     {
@@ -54,7 +56,13 @@ class SetStubTask extends AbstractTask
      */
     public function execute(Project $project)
     {
-        $this->debug('Using stub file <comment>' . $this->name . '</comment> (' . MiscUtils::formatFileSize(filesize($this->name)) . ')');
+        $this->debug(
+            sprintf(
+                'Using stub file <comment>%s</comment> (%s)',
+                $this->name,
+                MiscUtils::formatFileSize(filesize($this->name))
+            )
+        );
         $project->getPhar()->setStubFromFileFiltered($this->name);
     }
 }

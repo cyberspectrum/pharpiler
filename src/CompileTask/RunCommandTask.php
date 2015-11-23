@@ -69,6 +69,8 @@ class RunCommandTask extends AbstractTask
 
     /**
      * {@inheritDoc}
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function execute(Project $project)
     {
@@ -89,6 +91,8 @@ class RunCommandTask extends AbstractTask
     }
 
     /**
+     * Format the command output nicely.
+     *
      * @param string $lines The output to format.
      *
      * @return string[]

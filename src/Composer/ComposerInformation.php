@@ -27,12 +27,32 @@ use Symfony\Component\Process\Process;
  */
 class ComposerInformation
 {
+    /**
+     * The composer root dir.
+     *
+     * @var string
+     */
     private $composerRoot;
 
+    /**
+     * The contents of the composer.json.
+     *
+     * @var array
+     */
     private $composerJson;
 
+    /**
+     * The contents of the installed.json.
+     *
+     * @var array
+     */
     private $installedJson;
 
+    /**
+     * List of packages names of all installed packages.
+     *
+     * @var string[]
+     */
     private $packageNames;
 
     /**
@@ -73,7 +93,9 @@ class ComposerInformation
     /**
      * Create a new instance.
      *
-     * @param $composerRoot
+     * @param string $composerRoot Path to the composer project root.
+     *
+     * @throws \InvalidArgumentException When the passed directory does not exist or is not a directory.
      */
     public function __construct($composerRoot)
     {
@@ -89,73 +111,8 @@ class ComposerInformation
 
         $this->addPackage($this->composerJson, true);
 
-        foreach ($this->installedJson as $package)
-        {
+        foreach ($this->installedJson as $package) {
             $this->addPackage($package);
-        }
-    }
-
-    /**
-     * Create a package information from the passed array and add it to the list.
-     *
-     * @param array $data   The package information.
-     *
-     * @param bool  $isRoot Flag if this is the root package.
-     *
-     * @return void
-     */
-    private function addPackage($data, $isRoot = false)
-    {
-        $this->packageArray[$data['name']] = new PackageInformation(
-            $data['name'],
-            $data,
-            $this->composerRoot,
-            $isRoot
-        );
-
-        if (isset($data['provide'])) {
-            foreach ($data['provide'] as $packageName => $version) {
-                $this->packageArray[$packageName] = new PackageInformation(
-                    $packageName,
-                    $data,
-                    $this->composerRoot,
-                    $isRoot
-                );
-            }
-        }
-        if (isset($data['replace'])) {
-            foreach ($data['replace'] as $packageName => $version) {
-                $this->packageArray[$packageName] = new PackageInformation(
-                    $packageName,
-                    $data,
-                    $this->composerRoot,
-                    $isRoot
-                );
-            }
-        }
-
-        if (isset($data['require'])) {
-            // Scan for platform packages and add them.
-            foreach ($data['require'] as $packageName => $version) {
-                if (($packageName === 'php') || (substr($packageName, 0, 4) === 'ext-')) {
-                    $this->packageArray[$packageName] = new PackageInformation(
-                        $packageName,
-                        ['version' => $version],
-                        $this->composerRoot
-                    );
-                }
-            }
-        }
-        if (isset($data['require-dev'])) {
-            foreach ($data['require-dev'] as $packageName => $version) {
-                if (($packageName === 'php') || (substr($packageName, 0, 4) === 'ext-')) {
-                    $this->packageArray[$packageName] = new PackageInformation(
-                        $packageName,
-                        ['version' => $version],
-                        $this->composerRoot
-                    );
-                }
-            }
         }
     }
 
@@ -198,7 +155,7 @@ class ComposerInformation
             return $this->packageRoots[$packageName] = $this->getPackageArray($packageName)->getPackageDirectory();
         }
 
-      return $this->packageRoots[$packageName];
+        return $this->packageRoots[$packageName];
     }
 
     /**
@@ -240,7 +197,7 @@ class ComposerInformation
      *
      * @param string[]    $ignorePackages The names of packages that shall be ignored.
      *
-     * @param bool        $recursive Flag if the dependencies shall be retrieved recursively (default: true).
+     * @param bool        $recursive      Flag if the dependencies shall be retrieved recursively (default: true).
      *
      * @return string[]
      */
@@ -286,7 +243,7 @@ class ComposerInformation
     public function getPackageType($packageName)
     {
         if (isset($this->packageTypes[$packageName])) {
-          return $this->packageTypes[$packageName];
+            return $this->packageTypes[$packageName];
         }
 
         return $this->packageTypes[$packageName] = $this->getPackageArray($packageName)->getType();
@@ -298,6 +255,8 @@ class ComposerInformation
      * @param string $packageName The package name.
      *
      * @return PackageInformation
+     *
+     * @throws \RuntimeException When a package is not installed.
      */
     private function getPackageArray($packageName)
     {
@@ -314,6 +273,8 @@ class ComposerInformation
      * @param string $filename The file to load.
      *
      * @return array
+     *
+     * @throws \InvalidArgumentException When the file can not be found.
      */
     private function readJson($filename)
     {
@@ -322,5 +283,72 @@ class ComposerInformation
         }
 
         return json_decode(file_get_contents($filename), true);
+    }
+
+    /**
+     * Create a package information from the passed array and add it to the list.
+     *
+     * @param array $data   The package information.
+     *
+     * @param bool  $isRoot Flag if this is the root package.
+     *
+     * @return void
+     */
+    private function addPackage($data, $isRoot = false)
+    {
+        $this->packageArray[$data['name']] = new PackageInformation(
+            $data['name'],
+            $data,
+            $this->composerRoot,
+            $isRoot
+        );
+
+        if (isset($data['provide'])) {
+            foreach ($data['provide'] as $packageName => $version) {
+                $this->packageArray[$packageName] = new PackageInformation(
+                    $packageName,
+                    $data,
+                    $this->composerRoot,
+                    $isRoot
+                );
+            }
+        }
+        if (isset($data['replace'])) {
+            foreach ($data['replace'] as $packageName => $version) {
+                $this->packageArray[$packageName] = new PackageInformation(
+                    $packageName,
+                    $data,
+                    $this->composerRoot,
+                    $isRoot
+                );
+            }
+        }
+
+        $this->addRequiredPackagesFrom($data, 'require');
+        $this->addRequiredPackagesFrom($data, 'require-dev');
+    }
+
+    /**
+     * Add the required packages from the specified section.
+     *
+     * @param array  $data    The json data array.
+     *
+     * @param string $section The section to read packages from.
+     *
+     * @return void
+     */
+    private function addRequiredPackagesFrom($data, $section)
+    {
+        if (isset($data[$section])) {
+            foreach ($data[$section] as $packageName => $version) {
+                if (($packageName === 'php') || (substr($packageName, 0, 4) === 'ext-')) {
+                    $this->packageArray[$packageName] = new PackageInformation(
+                        $packageName,
+                        ['version' => $version],
+                        $this->composerRoot
+                    );
+                }
+            }
+        }
     }
 }
