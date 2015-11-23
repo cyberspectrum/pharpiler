@@ -64,7 +64,6 @@ class Configuration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder();
         $rootNode    = $treeBuilder->root('pharpiler');
 
-        // FIXME: we need to add the base configurations here.
         $rootNode
             ->children()
                 ->scalarNode('phar')
@@ -79,7 +78,7 @@ class Configuration implements ConfigurationInterface
                     ->info('The compile tasks.')
                     ->validate()
                         ->always(function ($value) {
-                            // FIXME: mark here which values are mandatory for each task type.
+                            // We should mark here which values are mandatory for each task type and check the content.
                             return $value;
                         });
 
@@ -309,13 +308,22 @@ class Configuration implements ConfigurationInterface
     {
         return function ($value) {
             if (!is_array($value)) {
-                // FIXME: check that we only have package-name: {include_files: [], exclude_files: [], rewrite_paths: []}
                 throw new \InvalidArgumentException(
                     sprintf('Invalid value for package_override: %s', json_encode($value))
                 );
             }
 
             foreach (array_keys($value) as $packageName) {
+                $unknown = array_diff(
+                    array_keys($value[$packageName]),
+                    ['include_files', 'exclude_files', 'rewrite_paths']
+                );
+                if (!empty($unknown)) {
+                    throw new \InvalidArgumentException(
+                        sprintf('Unknown keys detected for package_override: %s', json_encode($unknown))
+                    );
+                }
+
                 foreach ([
                              'include_files',
                              'exclude_files'
