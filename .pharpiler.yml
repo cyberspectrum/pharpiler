@@ -27,6 +27,10 @@ tasks:
         exclude_files:
           - *default_exclude_files
           - "(Tester\/)"
+      symfony/dependency-injection:
+        include_files:
+          - "*/YamlFileLoader.php"
+          - "(ParameterBag\/)"
 
   - type: set-stub
     stub_file: %package:cyberspectrum/pharpiler%/phar/stub.php
