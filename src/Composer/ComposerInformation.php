@@ -20,8 +20,6 @@
 
 namespace CyberSpectrum\PharPiler\Composer;
 
-use Symfony\Component\Process\Process;
-
 /**
  * This class provides an easy interface to the composer.json and installed.json.
  */
@@ -207,20 +205,15 @@ class ComposerInformation
         if ((null === $package)) {
             $package = $this->composerJson['name'];
         }
-        $dependencies = $this->getPackageArray($package)->getDependencies($ignorePackages);
 
         if (!$recursive) {
-            return $dependencies;
+            return $this->getPackageArray($package)->getDependencies($ignorePackages);
         }
 
-        foreach ($dependencies as $dependency) {
-            $dependencies = array_merge(
-                $dependencies,
-                $this->getDependencies($dependency, $ignorePackages, true)
-            );
-        }
+        $dependencies = [];
+        $this->getDependenciesRecursive($package, $ignorePackages, $dependencies);
 
-        return array_unique($dependencies);
+        return array_unique(array_values($dependencies));
     }
 
     /**
@@ -265,6 +258,30 @@ class ComposerInformation
         }
 
         return $this->packageArray[$packageName];
+    }
+
+    /**
+     * Recursively collect the dependencies.
+     *
+     * @param string   $package        The package name.
+     *
+     * @param string[] $ignorePackages The names of packages that shall be ignored.
+     *
+     * @param string[] $results        Result collection.
+     *
+     * @return void
+     */
+    private function getDependenciesRecursive($package, $ignorePackages, &$results)
+    {
+        $dependencies = $this->getPackageArray($package)->getDependencies($ignorePackages);
+
+        foreach ($dependencies as $dependency) {
+            if (isset($results[$dependency])) {
+                continue;
+            }
+            $results[$dependency] = $dependency;
+            $this->getDependenciesRecursive($dependency, $ignorePackages, $results);
+        }
     }
 
     /**
