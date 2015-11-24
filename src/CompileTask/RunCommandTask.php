@@ -85,7 +85,7 @@ class RunCommandTask extends AbstractTask
      */
     public function execute(Project $project)
     {
-        $process = new Process($this->command, $this->workingDir, $this->env);
+        $process = new Process($this->command, $this->workingDir, $this->getEnvironmentVariables());
         $process->setTimeout($this->timeout);
 
         $process->mustRun();
@@ -118,5 +118,30 @@ class RunCommandTask extends AbstractTask
         }
 
         return $processed;
+    }
+
+    /**
+     * Calculate the correct environment variables.
+     *
+     * @return null|\string[]
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+     */
+    private function getEnvironmentVariables()
+    {
+        $env = $this->env;
+
+        if (null === $env) {
+            return null;
+        }
+
+        foreach (array_keys($_SERVER) as $key) {
+            if (!isset($env[$key]) && false !== ($value = getenv($key))) {
+                $env[$key] = $value;
+            }
+        }
+
+        return $env;
     }
 }
