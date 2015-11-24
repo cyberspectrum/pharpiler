@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.org/cyberspectrum/pharpiler.png)](https://travis-ci.org/cyberspectrum/pharpiler)
+[![Latest Version tagged](http://img.shields.io/github/tag/cyberspectrum/pharpiler.svg)](https://github.com/cyberspectrum/pharpiler/tags)
+[![Latest Version on Packagist](http://img.shields.io/packagist/v/cyberspectrum/pharpiler.svg)](https://packagist.org/packages/cyberspectrum/pharpiler)
+[![Installations via composer per month](http://img.shields.io/packagist/dm/cyberspectrum/pharpiler.svg)](https://packagist.org/packages/cyberspectrum/pharpiler)
+
 What is Pharpiler?
 ==================
 
