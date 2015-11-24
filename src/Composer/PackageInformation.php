@@ -104,22 +104,35 @@ class PackageInformation
             return $this->loadVersionInformationFromGit();
         }
 
+        $normalized = $this->data['version_normalized'];
+        if ('dev-' === substr($normalized, 0, 4)) {
+            if (isset($this->data['extra']['branch-alias'][$normalized])) {
+                $normalized = $this->data['extra']['branch-alias'][$normalized];
+            }
+
+            if (isset($this->data['source']['reference'])) {
+                $normalized .= $this->data['source']['reference'];
+            } elseif (isset($this->data['dist']['reference'])) {
+                $normalized .= $this->data['dist']['reference'];
+            }
+        }
+
         if ($this->isProvided()) {
-            return $this->makeVersion($this->data['provide'][$this->name], $this->data['version_normalized']);
+            return $this->makeVersion($this->data['provide'][$this->name], $normalized);
         }
         if ($this->isReplaced()) {
-            return $this->makeVersion($this->data['replace'][$this->name], $this->data['version_normalized']);
+            return $this->makeVersion($this->data['replace'][$this->name], $normalized);
         }
 
         if ($this->name === $this->data['name']) {
-            return $this->data['version_normalized'];
+            return $normalized;
         }
 
         throw new \LogicException('Unable to determine package version of ' . $this->name);
     }
 
     /**
-     * This retrieves the version.
+     * This retrieves the release date.
      *
      * @return string
      */
@@ -131,6 +144,7 @@ class PackageInformation
 
         return $this->data['time'];
     }
+
     /**
      * Retrieve the package type.
      *
@@ -205,7 +219,7 @@ class PackageInformation
             return trim($process->getOutput());
         }
 
-        $process = new Process('git log --pretty="%H" -n1 HEAD', $this->getPackageDirectory());
+        $process = new Process('git log --pretty="%h" -n1 HEAD', $this->getPackageDirectory());
         if ($process->run() != 0) {
             throw new \RuntimeException(
                 'Can\'t run git log in ' . $this->getPackageDirectory() . '. ' .
@@ -213,7 +227,17 @@ class PackageInformation
             );
         }
 
-        return trim($process->getOutput());
+        $version = trim($process->getOutput());
+
+        $process = new Process('git rev-parse --abbrev-ref HEAD', $this->getPackageDirectory());
+        if ($process->run() == 0) {
+            $branch = 'dev-' . trim($process->getOutput());
+            if (isset($this->data['extra']['branch-alias'][$branch])) {
+                $version = $this->data['extra']['branch-alias'][$branch] . '#' . $version;
+            }
+        }
+
+        return $version;
     }
 
     /**
