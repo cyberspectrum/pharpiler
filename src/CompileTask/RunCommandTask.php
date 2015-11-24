@@ -50,6 +50,13 @@ class RunCommandTask extends AbstractTask
     private $env;
 
     /**
+     * The command timeout.
+     *
+     * @var int|null
+     */
+    private $timeout;
+
+    /**
      * Create a new instance.
      *
      * @param array $config
@@ -65,6 +72,10 @@ class RunCommandTask extends AbstractTask
         if (isset($config['env'])) {
             $this->env = $config['env'];
         }
+
+        if (array_key_exists('timeout', $config)) {
+            $this->timeout = $config['timeout'];
+        }
     }
 
     /**
@@ -75,6 +86,8 @@ class RunCommandTask extends AbstractTask
     public function execute(Project $project)
     {
         $process = new Process($this->command, $this->workingDir, $this->env);
+        $process->setTimeout($this->timeout);
+
         $process->mustRun();
 
         if ($output = $process->getOutput()) {

@@ -162,6 +162,21 @@ class Configuration implements ConfigurationInterface
                 }
             )
             ->end()
+            ->end()
+            ->end()
+            ->scalarNode('timeout')
+            ->info('Sets the process timeout (max. runtime). To disable the timeout, set this value to null.')
+            ->validate()
+            ->always(
+                function ($value) {
+                    if (!is_numeric($value) && (null !== $value)) {
+                        throw new \InvalidArgumentException(sprintf('Invalid timeout %s', json_encode($value)));
+                    }
+
+                    return $value;
+                }
+            )
+            ->end()
             ->end();
     }
 
