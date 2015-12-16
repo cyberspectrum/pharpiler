@@ -290,7 +290,7 @@ class FileEntry
             throw new \InvalidArgumentException('Invalid compression value passed.');
         }
 
-        $this->flags &= ($flag | 0xFFFFCFFF);
+        $this->flags = (($this->flags & 0xFFFFCFFF) | $flag);
     }
 
     /**
@@ -337,6 +337,11 @@ class FileEntry
     {
         if (0 === $this->getCompression()) {
             return $this->getSizeUncompressed();
+        }
+
+        // Update file info.
+        if (empty($this->sizeCompressed)) {
+            $this->getCompressedContent();
         }
 
         return $this->sizeCompressed;
@@ -426,7 +431,8 @@ class FileEntry
                 throw new \LogicException('Compressed file but it has no content.');
             }
 
-            $this->content = $content;
+            $this->sizeCompressed = strlen($content);
+            $this->content        = $content;
         }
 
         return $this->content;
