@@ -452,6 +452,7 @@ class Configuration implements ConfigurationInterface
             ->info('The rewrite filters to use.')
             ->cannotBeEmpty()
             ->prototype('array')
+            ->normalizeKeys(false)
             ->beforeNormalization()
             ->always($this->createReplaceFilterShortNotationMangler())
             ->end()
