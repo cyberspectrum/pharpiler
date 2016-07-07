@@ -20,7 +20,6 @@
 
 namespace CyberSpectrum\PharPiler\Filter;
 
-use Symfony\Component\Finder\Expression\Expression;
 use Symfony\Component\Finder\Glob;
 
 /**

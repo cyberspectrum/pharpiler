@@ -22,7 +22,6 @@ namespace CyberSpectrum\PharPiler\CompileTask;
 
 use CyberSpectrum\PharPiler\AutoloadOptimizer\AutoloadDumper;
 use CyberSpectrum\PharPiler\AutoloadOptimizer\AutoloadInformationOptimizer;
-use CyberSpectrum\PharPiler\Phar;
 use CyberSpectrum\PharPiler\Project;
 use CyberSpectrum\PharPiler\Util\MiscUtils;
 use Symfony\Component\Finder\Finder;
