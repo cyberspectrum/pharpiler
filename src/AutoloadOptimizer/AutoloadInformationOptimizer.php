@@ -223,6 +223,11 @@ class AutoloadInformationOptimizer
                 continue;
             }
 
+            $value = realpath($value);
+            if (empty($value)) {
+                continue;
+            }
+
             if (substr($value, 0, $this->stripLength) === $this->strip) {
                 $value = substr($value, $this->stripLength);
                 if (!isset($this->whitelist[$value])) {
@@ -250,6 +255,11 @@ class AutoloadInformationOptimizer
     {
         $result = [];
         foreach ($paths as $value) {
+            $value = realpath($value);
+            if (empty($value)) {
+                continue;
+            }
+
             if (!isset($this->whitelist[$value])) {
                 continue;
             }
