@@ -4,6 +4,7 @@ php:
   - "5.5"
   - "5.6"
   - "7.0"
+  - "7.1"
   - "nightly"
 
 sudo: false
@@ -23,3 +24,7 @@ git:
 cache:
   directories:
     - vendor
+
+matrix:
+  allow_failures:
+    php: "nightly"
