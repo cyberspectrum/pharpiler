@@ -82,6 +82,13 @@ class AddPackageTask extends AbstractTask
     private $rewritePaths;
 
     /**
+     * Rewrite the paths.
+     *
+     * @var array[]
+     */
+    private $packageOverride;
+
+    /**
      * Create a new instance.
      *
      * @param array $config
@@ -114,7 +121,7 @@ class AddPackageTask extends AbstractTask
             $packageRelative = substr($packageRoot, $prefixLength);
             foreach ($this->prepareFinder($packageRoot, $package) as $file) {
                 /** @var SplFileInfo $file */
-                $filePath  = $file->getPathname();
+                $filePath  = str_replace(DIRECTORY_SEPARATOR, '/', $file->getPathname());
                 $localPath = $this->rewritePath($file->getRelativePathname(), $package, $packageRelative);
                 $this->debug(
                     sprintf(
@@ -170,6 +177,7 @@ class AddPackageTask extends AbstractTask
      */
     private function rewritePath($path, $package, $packageRelative)
     {
+        $path         = str_replace(DIRECTORY_SEPARATOR, '/', $path);
         $rewritePaths = $this->rewritePaths;
         if (isset($this->packageOverride[$package]) && isset($this->packageOverride[$package]['rewrite_paths'])) {
             $rewritePaths = $this->packageOverride[$package]['rewrite_paths'];
@@ -180,14 +188,14 @@ class AddPackageTask extends AbstractTask
             if (substr($path, 0, $len) === $rewritePath) {
                 $destination = $newTarget . substr($path, $len);
                 if ($destination[0] !== '/') {
-                    return $packageRelative  . DIRECTORY_SEPARATOR . $destination;
+                    return $packageRelative  . '/' . $destination;
                 }
 
                 return $destination;
             }
         }
 
-        return $packageRelative . DIRECTORY_SEPARATOR . $path;
+        return $packageRelative . '/' . $path;
     }
 
     /**

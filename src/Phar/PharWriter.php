@@ -89,7 +89,6 @@ class PharWriter
 
         unset($this->phar);
         unset($this->file);
-
     }
 
     /**

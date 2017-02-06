@@ -86,7 +86,8 @@ class CompileCommand extends Command
     {
         $this->logger = new ConsoleLogger($output);
 
-        $information   = new ComposerInformation(dirname($input->getArgument('composer')));
+        $baseDir       = str_replace(DIRECTORY_SEPARATOR, '/', dirname($input->getArgument('composer')));
+        $information   = new ComposerInformation($baseDir);
         $processor     = new Processor();
         $configuration = new Configuration();
         $processed     = $processor->processConfiguration(
@@ -221,6 +222,9 @@ class CompileCommand extends Command
         $parameterBag = new ParameterBag($baseParameters);
 
         foreach ($information->getPackageNames() as $packageName) {
+            if ('platform' === $information->getPackageType($packageName)) {
+                continue;
+            }
             $parameterBag->set(sprintf('package:%s', $packageName), $information->getPackageDirectory($packageName));
             $parameterBag->set(sprintf('version:%s', $packageName), $information->getPackageVersion($packageName));
             $parameterBag->set(sprintf('date:%s', $packageName), $information->getPackageReleaseDate($packageName));

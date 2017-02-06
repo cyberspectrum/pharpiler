@@ -97,7 +97,7 @@ class ComposerInformation
      */
     public function __construct($composerRoot)
     {
-        $composerRoot = realpath($composerRoot) ?: getcwd();
+        $composerRoot = str_replace(DIRECTORY_SEPARATOR, '/', realpath($composerRoot) ?: getcwd());
 
         if (!is_dir($composerRoot)) {
             throw new \InvalidArgumentException('Directory does not exist or is not a directory: ' . $composerRoot);

@@ -425,11 +425,7 @@ class Pharchive
      *
      * @return int
      *
-     * @throws \RuntimeException When the version string could not be parsed.
-     *
-     * @throws \RuntimeException When the version is neither array nor string.
-     *
-     * @throws \OutOfBoundsException When the version field is not between 0 and 15.
+     * @throws \RuntimeException When the version string could not be parsed or is neither array nor string.
      */
     private function encodePharVersion($version)
     {
