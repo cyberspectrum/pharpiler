@@ -82,6 +82,13 @@ class AddPackageTask extends AbstractTask
     private $rewritePaths;
 
     /**
+     * Rewrite the paths.
+     *
+     * @var array[]
+     */
+    private $packageOverride;
+
+    /**
      * Create a new instance.
      *
      * @param array $config
