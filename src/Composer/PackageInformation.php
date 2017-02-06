@@ -247,13 +247,13 @@ class PackageInformation
     /**
      * Try to look up the version information for a given package.
      *
-     * @return array
+     * @return string
      *
      * @throws \RuntimeException When the git repository is invalid or git executable can not be run.
      */
     private function loadReleaseDateInformationFromGit()
     {
-        $process = new Process('git log -n1 --pretty=%ci HEAD', __DIR__);
+        $process = new Process('git log -n1 --pretty=%ci HEAD', $this->getPackageDirectory());
         if ($process->run() != 0) {
             throw new \RuntimeException(
                 'Can\'t run git log in ' . $this->getPackageDirectory() . '. ' .
