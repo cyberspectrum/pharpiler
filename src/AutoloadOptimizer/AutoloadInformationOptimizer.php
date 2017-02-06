@@ -146,7 +146,7 @@ class AutoloadInformationOptimizer
             while ($entry !== '.' && $entry !== '/') {
                 $this->whitelist[$entry] = $entry;
 
-                $entry = dirname($entry);
+                $entry = str_replace('\\', '/', dirname($entry));
 
                 if (isset($this->whitelist[$entry])) {
                     break;
@@ -223,7 +223,7 @@ class AutoloadInformationOptimizer
                 continue;
             }
 
-            $value = realpath($value);
+            $value = str_replace('\\', '/', realpath($value));
             if (empty($value)) {
                 continue;
             }
@@ -255,7 +255,7 @@ class AutoloadInformationOptimizer
     {
         $result = [];
         foreach ($paths as $value) {
-            $value = realpath($value);
+            $value = str_replace('\\', '/', realpath($value));
             if (empty($value)) {
                 continue;
             }
