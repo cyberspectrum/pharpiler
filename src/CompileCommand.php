@@ -221,6 +221,9 @@ class CompileCommand extends Command
         $parameterBag = new ParameterBag($baseParameters);
 
         foreach ($information->getPackageNames() as $packageName) {
+            if ('platform' === $information->getPackageType($packageName)) {
+                continue;
+            }
             $parameterBag->set(sprintf('package:%s', $packageName), $information->getPackageDirectory($packageName));
             $parameterBag->set(sprintf('version:%s', $packageName), $information->getPackageVersion($packageName));
             $parameterBag->set(sprintf('date:%s', $packageName), $information->getPackageReleaseDate($packageName));
