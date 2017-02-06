@@ -77,6 +77,10 @@ class PackageInformation
         } elseif ($this->isReplaced() || $this->isProvided()) {
             $this->installDir = $installRoot . '/vendor/' . $data['name'];
         } else {
+            if ('platform' === $this->getType()) {
+                $this->installDir = null;
+                return;
+            }
             $this->installDir = $installRoot . '/vendor/' . $name;
         }
     }
