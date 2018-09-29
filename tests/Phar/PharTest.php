@@ -90,7 +90,11 @@ class PharTest extends TestCase
      */
     public function testVersionParsingWithInvalidRaisesException($expectedException, $value)
     {
-        $this->expectException($expectedException);
+        if (method_exists($this, 'expectException')) {
+            $this->expectException($expectedException);
+        } else {
+            $this->setExpectedException($expectedException);
+        }
 
         $phar = new Pharchive();
 
