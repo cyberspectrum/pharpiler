@@ -8,11 +8,10 @@
   convertWarningsToExceptions="true"
   processIsolation="false"
   stopOnFailure="false"
-  syntaxCheck="false"
   bootstrap="tests/bootstrap.php"
 >
   <testsuites>
-    <testsuite name="tenside core tests">
+    <testsuite name="pharpiler tests">
       <directory>./tests/</directory>
     </testsuite>
   </testsuites>

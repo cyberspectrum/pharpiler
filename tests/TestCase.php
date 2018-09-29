@@ -25,7 +25,7 @@ use Symfony\Component\Filesystem\Filesystem;
 /**
  * This class provides easy management of fixtures.
  */
-class TestCase extends \PHPUnit_Framework_TestCase
+class TestCase extends \PHPUnit\Framework\TestCase
 {
     /**
      * Temporary working dir.

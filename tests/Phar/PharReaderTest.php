@@ -30,7 +30,7 @@ class PharReaderTest extends TestCase
      *
      * @return array
      */
-    public function testReadingFlagsProvider()
+    public function readingFlagsProvider()
     {
         $compressions = [\Phar::NONE, \Phar::GZ, \Phar::BZ2];
         $signatures   = [
@@ -55,7 +55,7 @@ class PharReaderTest extends TestCase
      *
      * @return void
      *
-     * @dataProvider testReadingFlagsProvider
+     * @dataProvider readingFlagsProvider
      */
     public function testReading($compression, $signatureName, $signatureFlag)
     {
@@ -97,7 +97,7 @@ EOF
      *
      * @return void
      *
-     * @dataProvider testReadingFlagsProvider
+     * @dataProvider readingFlagsProvider
      */
     public function testReadingEntirePharCompressed($compression, $signatureName, $signatureFlag)
     {
