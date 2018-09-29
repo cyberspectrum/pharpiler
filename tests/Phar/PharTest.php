@@ -20,10 +20,10 @@
 
 namespace CyberSpectrum\PharPiler\Tests\Phar;
 
-
 use CyberSpectrum\PharPiler\Phar\Pharchive;
+use PHPUnit\Framework\TestCase;
 
-class PharTest extends \PHPUnit_Framework_TestCase
+class PharTest extends TestCase
 {
     public function versionNumberProvider()
     {
@@ -90,7 +90,7 @@ class PharTest extends \PHPUnit_Framework_TestCase
      */
     public function testVersionParsingWithInvalidRaisesException($expectedException, $value)
     {
-        $this->setExpectedException($expectedException);
+        $this->expectException($expectedException);
 
         $phar = new Pharchive();
 

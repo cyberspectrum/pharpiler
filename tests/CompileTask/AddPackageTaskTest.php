@@ -20,8 +20,9 @@
 
 namespace CyberSpectrum\PharPiler\Tests\CompileTask;
 
+use PHPUnit\Framework\TestCase;
 
-class AddPackageTaskTest extends \PHPUnit_Framework_TestCase
+class AddPackageTaskTest extends TestCase
 {
     public function testPackaging()
     {

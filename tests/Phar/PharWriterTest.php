@@ -33,7 +33,7 @@ class PharWriterTest extends TestCase
      *
      * @return array
      */
-    public function testWritingFlagsProvider()
+    public function writingFlagsProvider()
     {
         $compressions = [\Phar::NONE, \Phar::GZ, \Phar::BZ2];
         $signatures   = [
@@ -58,7 +58,7 @@ class PharWriterTest extends TestCase
      *
      * @return void
      *
-     * @dataProvider testWritingFlagsProvider
+     * @dataProvider writingFlagsProvider
      */
     public function testWriting($compression, $signatureName, $signatureFlag)
     {
@@ -116,7 +116,7 @@ EOF
      *
      * @return void
      *
-     * @dataProvider testWritingFlagsProvider
+     * @dataProvider writingFlagsProvider
      */
     public function testWriteLoaded($compression, $signatureFlag)
     {

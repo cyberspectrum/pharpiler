@@ -22,8 +22,9 @@ namespace CyberSpectrum\PharPiler\Tests\Iterator;
 
 
 use CyberSpectrum\PharPiler\Iterator\FullPathFilterIterator;
+use PHPUnit\Framework\TestCase;
 
-class FullPathFilterIteratorTest extends \PHPUnit_Framework_TestCase
+class FullPathFilterIteratorTest extends TestCase
 {
     /**
      * Test the matches.

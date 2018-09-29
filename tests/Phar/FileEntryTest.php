@@ -21,11 +21,12 @@
 namespace CyberSpectrum\PharPiler\Tests\Phar;
 
 use CyberSpectrum\PharPiler\Phar\FileEntry;
+use PHPUnit\Framework\TestCase;
 
 /**
  * This class tests the FileEntry class.
  */
-class FileEntryTest extends \PHPUnit_Framework_TestCase
+class FileEntryTest extends TestCase
 {
     /**
      * Provider method for the testPermissionParsing() method.

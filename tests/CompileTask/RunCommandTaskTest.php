@@ -21,13 +21,14 @@
 namespace CyberSpectrum\PharPiler\Tests\CompileTask;
 
 use CyberSpectrum\PharPiler\CompileTask\RunCommandTask;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 /**
  * This class tests the RunCommandTask class
  */
-class RunCommandTaskTest extends \PHPUnit_Framework_TestCase
+class RunCommandTaskTest extends TestCase
 {
     /**
      * Test that the execution is successful.
