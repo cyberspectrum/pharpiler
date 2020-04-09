@@ -61,8 +61,8 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode    = $treeBuilder->root('pharpiler');
+        $treeBuilder = new TreeBuilder('pharpiler');
+        $rootNode    = $treeBuilder->getRootNode();
 
         $rootNode
             ->children()
@@ -495,7 +495,7 @@ class Configuration implements ConfigurationInterface
     {
         return function ($value) {
             // Allow "short notation" for replace filters.
-            if (('replace' === $value['type']) && (!isset($value['search']) || !isset($value['search']))) {
+            if (('replace' === $value['type']) && !isset($value['search'])) {
                 $keys = array_diff(
                     array_keys($value),
                     [

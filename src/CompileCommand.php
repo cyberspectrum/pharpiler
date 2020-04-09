@@ -26,7 +26,6 @@ use CyberSpectrum\PharPiler\Composer\ComposerInformation;
 use CyberSpectrum\PharPiler\Configuration\Configuration;
 use CyberSpectrum\PharPiler\Configuration\ConfigurationValues;
 use CyberSpectrum\PharPiler\Configuration\Loader\YamlLoader;
-use CyberSpectrum\PharPiler\Filter;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\FileLocatorInterface;
@@ -82,7 +81,7 @@ class CompileCommand extends Command
     /**
      * {@inheritDoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->logger = new ConsoleLogger($output);
 
@@ -116,6 +115,8 @@ class CompileCommand extends Command
         unset($project);
 
         $this->logger->notice('All done.');
+
+        return 0;
     }
 
     /**
@@ -254,7 +255,7 @@ class CompileCommand extends Command
                         $filters[] = new Filter\ReplaceStringFilter($filter);
                         break;
                     case 'php-strip':
-                        $filters[] = new Filter\PhpStripWhiteSpaceFilter($filter);
+                        $filters[] = new Filter\PhpStripWhiteSpaceFilter();
                         break;
                     case 'warning-time':
                         $filters[] = new Filter\ReplaceStringWithTimestamp($filter);

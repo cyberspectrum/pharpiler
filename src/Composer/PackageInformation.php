@@ -58,13 +58,10 @@ class PackageInformation
     /**
      * Create a new instance.
      *
-     * @param string $name        The name.
-     *
-     * @param string $data        The package data.
-     *
-     * @param string $installRoot The path to the composer project root dir.
-     *
-     * @param bool   $isRoot      Boolean flag if the package is the root package.
+     * @param string   $name        The name.
+     * @param string[] $data        The package data.
+     * @param string   $installRoot The path to the composer project root dir.
+     * @param bool     $isRoot      Boolean flag if the package is the root package.
      */
     public function __construct($name, $data, $installRoot, $isRoot = false)
     {
@@ -212,18 +209,18 @@ class PackageInformation
     /**
      * Try to look up the version information for a given package.
      *
-     * @return array
+     * @return string
      *
      * @throws \RuntimeException When the git repository is invalid or git executable can not be run.
      */
-    private function loadVersionInformationFromGit()
+    private function loadVersionInformationFromGit(): string
     {
-        $process = new Process('git describe --tags --exact-match HEAD', $this->getPackageDirectory());
+        $process = new Process(['git', 'describe', '--tags', '--exact-match', 'HEAD'], $this->getPackageDirectory());
         if ($process->run() == 0) {
             return trim($process->getOutput());
         }
 
-        $process = new Process('git log --pretty="%h" -n1 HEAD', $this->getPackageDirectory());
+        $process = new Process(['git', 'log', '--pretty="%h"', '-n1', 'HEAD'], $this->getPackageDirectory());
         if ($process->run() != 0) {
             throw new \RuntimeException(
                 'Can\'t run git log in ' . $this->getPackageDirectory() . '. ' .
@@ -233,7 +230,7 @@ class PackageInformation
 
         $version = trim($process->getOutput());
 
-        $process = new Process('git rev-parse --abbrev-ref HEAD', $this->getPackageDirectory());
+        $process = new Process(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], $this->getPackageDirectory());
         if ($process->run() == 0) {
             $branch = 'dev-' . trim($process->getOutput());
             if (isset($this->data['extra']['branch-alias'][$branch])) {
@@ -253,7 +250,7 @@ class PackageInformation
      */
     private function loadReleaseDateInformationFromGit()
     {
-        $process = new Process('git log -n1 --pretty=%ci HEAD', $this->getPackageDirectory());
+        $process = new Process(['git', 'log', '-n1', '--pretty=%ci', 'HEAD'], $this->getPackageDirectory());
         if ($process->run() != 0) {
             throw new \RuntimeException(
                 'Can\'t run git log in ' . $this->getPackageDirectory() . '. ' .
