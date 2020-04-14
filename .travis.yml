@@ -1,20 +1,44 @@
+dist: xenial
+
 language: php
 
-php:
-  - "7.2"
-  - "7.1"
-  - "7.0"
-  - "5.6"
-  - "nightly"
+matrix:
+  fast_finish: true
+  include:
+    # latest requirement test
+    - php: nightly
+    - php: 7.4
+    - php: 7.3
+      env:
+        - COMPOSER_FLAGS=""
+    # minimum requirement test
+    - php: 7.3
+      env:
+        - COMPOSER_FLAGS="--prefer-stable --prefer-lowest"
+  allow_failures:
+    - php: nightly
 
-sudo: false
+before_install:
+  - echo "memory_limit = -1" > travis.php.ini && phpenv config-add travis.php.ini
+  # interim solution until phpcq/phpcq:2.0 has been released.
+  - git clone -b dev-2.0 https://github.com/phpcq/phpcq.git phpcq
+  - cd phpcq && composer install
 
 install:
   - travis_retry composer self-update && composer --version
-  - travis_retry composer update --prefer-dist --no-interaction
+  - >
+    if [ "x${TRAVIS_TAG}" != "x" ]; then
+      COMPOSER_ROOT_VERSION=${TRAVIS_TAG} travis_retry composer update $COMPOSER_FLAGS --prefer-dist --no-interaction;
+    else
+      COMPOSER_ROOT_VERSION=$([[ ${TRAVIS_BRANCH} =~ (release|hotfix)/([0-9.]*(-(alpha|beta|rc)[0-9]+)?) ]] \
+        && echo ${BASH_REMATCH[2]} \
+        || echo dev-${TRAVIS_BRANCH}) \
+        travis_retry composer update $COMPOSER_FLAGS --prefer-dist --no-interaction;
+    fi
+  - ./phpcq/phpcq update
 
 script:
-  - ant -keep-going
+  - ./phpcq/phpcq run
   - ./test-compile.sh
 
 # Hack to make things work again - we can not use a shallow repository.
@@ -24,7 +48,3 @@ git:
 cache:
   directories:
     - vendor
-
-matrix:
-  allow_failures:
-    - php: "nightly"
