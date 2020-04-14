@@ -28,7 +28,7 @@ class PhpStripWhiteSpaceFilter extends AbstractFilter
     /**
      * {@inheritDoc}
      */
-    public function apply($content)
+    public function apply(string $content): string
     {
         if (!function_exists('token_get_all')) {
             return $content;

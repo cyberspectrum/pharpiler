@@ -66,7 +66,7 @@ class ConfigurationValues
      *
      * @return array
      */
-    protected function splitPath($path)
+    protected function splitPath(string $path): array
     {
         return array_map(
             [$this, 'unescape'],
@@ -81,7 +81,7 @@ class ConfigurationValues
      *
      * @return string
      */
-    public function unescape($path)
+    public function unescape(string $path): string
     {
         return str_replace('\\' . static::PATH_SEPARATOR, static::PATH_SEPARATOR, $path);
     }
@@ -93,7 +93,7 @@ class ConfigurationValues
      *
      * @return string
      */
-    public function escape($path)
+    public function escape(string $path): string
     {
         return str_replace(static::PATH_SEPARATOR, '\\' . static::PATH_SEPARATOR, $path);
     }
@@ -103,9 +103,9 @@ class ConfigurationValues
      *
      * @param string $path The path of the value.
      *
-     * @return array|null
+     * @return array|string|null
      */
-    public function get($path)
+    public function get(string $path)
     {
         // special case, root element.
         if ($path === static::PATH_SEPARATOR) {
@@ -122,9 +122,9 @@ class ConfigurationValues
         while (null !== ($sub = array_shift($chunks))) {
             if (isset($scope[$sub])) {
                 $scope = $scope[$sub];
-            } else {
-                return null;
+                continue;
             }
+            return null;
         }
 
         return $this->parameterBag->resolveValue($scope);
@@ -137,7 +137,7 @@ class ConfigurationValues
      *
      * @return bool
      */
-    public function has($path)
+    public function has(string $path): bool
     {
         $chunks = $this->splitPath($path);
         $scope  = $this->data;

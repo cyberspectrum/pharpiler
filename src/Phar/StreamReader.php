@@ -20,6 +20,11 @@
 
 namespace CyberSpectrum\PharPiler\Phar;
 
+use HashContext;
+use InvalidArgumentException;
+use LengthException;
+use RuntimeException;
+
 /**
  * This class is a simple file reader.
  *
@@ -46,15 +51,11 @@ class StreamReader
      *
      * @param string $filename The file to read.
      *
-     * @throws \RuntimeException When the file can not be opened.
+     * @throws RuntimeException When the file can not be opened.
      */
     public function __construct($filename)
     {
         $this->file = $this->doOpen($filename);
-
-        if (!is_resource($this->file)) {
-            throw new \RuntimeException('Could not open file ' . $filename);
-        }
     }
 
     /**
@@ -76,20 +77,20 @@ class StreamReader
      *
      * @return string
      *
-     * @throws \InvalidArgumentException When attempting to read zero bytes.
+     * @throws InvalidArgumentException When attempting to read zero bytes.
      *
-     * @throws \LengthException When reading was not successful and $allowFail has not been set.
+     * @throws LengthException When reading was not successful and $allowFail has not been set.
      */
-    public function read($bytes, $allowFail = false)
+    public function read(int $bytes, bool $allowFail = false): string
     {
         if (0 === $bytes) {
-            throw new \InvalidArgumentException('Can not read zero bytes.');
+            throw new InvalidArgumentException('Can not read zero bytes.');
         }
 
         $data = fread($this->file, $bytes);
 
         if (!$allowFail && (strlen($data) !== $bytes)) {
-            throw new \LengthException('Failed to read ' . $bytes . ' bytes.');
+            throw new LengthException('Failed to read ' . $bytes . ' bytes.');
         }
 
         return (string) $data;
@@ -98,9 +99,9 @@ class StreamReader
     /**
      * Read a 32 bit unsigned integer (little endian).
      *
-     * @return mixed
+     * @return int
      */
-    public function readUint32le()
+    public function readUint32le(): int
     {
         $res = unpack('V', $this->read(4));
 
@@ -110,9 +111,9 @@ class StreamReader
     /**
      * Read a 16 bit unsigned integer (big endian).
      *
-     * @return StreamWriter
+     * @return int
      */
-    public function readUint16be()
+    public function readUint16be(): int
     {
         $res = unpack('n', $this->read(2));
 
@@ -124,7 +125,7 @@ class StreamReader
      *
      * @return StreamReader
      */
-    public function savePosition()
+    public function savePosition(): self
     {
         array_push($this->positions, $this->tell());
 
@@ -136,14 +137,14 @@ class StreamReader
      *
      * @return StreamReader
      *
-     * @throws \RuntimeException When the position stack is empty.
+     * @throws RuntimeException When the position stack is empty.
      */
-    public function loadPosition()
+    public function loadPosition(): self
     {
         $position = array_pop($this->positions);
 
         if (null === $position) {
-            throw new \RuntimeException('Position stack is empty.');
+            throw new RuntimeException('Position stack is empty.');
         }
 
         return $this->seek($position);
@@ -167,12 +168,12 @@ class StreamReader
      *
      * @return StreamReader
      *
-     * @throws \RuntimeException When the seek was not successful.
+     * @throws RuntimeException When the seek was not successful.
      */
-    public function seek($offset, $whence = SEEK_SET)
+    public function seek($offset, $whence = SEEK_SET): self
     {
         if (0 !== fseek($this->file, $offset, $whence)) {
-            throw new \RuntimeException('Could not seek.');
+            throw new RuntimeException('Could not seek.');
         }
 
         return $this;
@@ -183,7 +184,7 @@ class StreamReader
      *
      * @return int
      */
-    public function tell()
+    public function tell(): int
     {
         return ftell($this->file);
     }
@@ -193,7 +194,7 @@ class StreamReader
      *
      * @return string
      */
-    public function getContents()
+    public function getContents(): string
     {
         $this->savePosition()->seek(0);
 
@@ -212,7 +213,7 @@ class StreamReader
      *
      * @return int
      */
-    public function getLength()
+    public function getLength(): int
     {
         $this->savePosition()->seek(0);
         $length = 0;
@@ -233,7 +234,7 @@ class StreamReader
      *
      * @return string
      */
-    public function hashStream($hash, $rawOutput = false)
+    public function hashStream($hash, $rawOutput = false): string
     {
         $hash = hash_init($hash);
 
@@ -247,16 +248,18 @@ class StreamReader
      *
      * @param resource $context The hash context.
      *
-     * @return StreamWriter
+     * @return StreamReader
      *
-     * @throws \RuntimeException When the hash could not be updated.
+     * @throws RuntimeException When the hash could not be updated.
+     *
+     * @psalm-param HashContext $context
      */
-    public function hashUpdate($context)
+    public function hashUpdate($context): self
     {
         $this->savePosition();
         while ('' !== ($buffer = $this->read(1024, true))) {
             if (!hash_update($context, $buffer)) {
-                throw new \RuntimeException('Failed to update hash');
+                throw new RuntimeException('Failed to update hash');
             }
         }
         $this->loadPosition();
@@ -269,10 +272,16 @@ class StreamReader
      *
      * @param string $filename The file to open.
      *
-     * @return resource|bool
+     * @return resource
+     *
+     * @throws RuntimeException When the file could not be opened.
      */
-    protected function doOpen($filename)
+    protected function doOpen(string $filename)
     {
-        return fopen($filename, 'rb');
+        $handle = fopen($filename, 'rb');
+        if (false === $handle) {
+            throw new RuntimeException('Could not open file ' . $filename);
+        }
+        return $handle;
     }
 }

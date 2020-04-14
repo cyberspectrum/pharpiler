@@ -65,9 +65,9 @@ class AutoloadInformationOptimizer
     /**
      * The whitelist of classes.
      *
-     * @var string[string]
+     * @var array<string, string>
      */
-    private $whitelist;
+    private $whitelist = [];
 
     /**
      * The root path to strip from file names.
@@ -79,7 +79,7 @@ class AutoloadInformationOptimizer
     /**
      * The length of the root path to strip.
      *
-     * @var string
+     * @var int
      */
     private $stripLength;
 
@@ -87,15 +87,17 @@ class AutoloadInformationOptimizer
      * Create a new instance.
      *
      * @param string[] $whiteList   The file whitelist.
-     *
      * @param string   $projectRoot The composer project root.
      *
      * @return AutoloadInformationOptimizer
      */
-    public static function create($whiteList, $projectRoot)
+    public static function create(array $whiteList, string $projectRoot): AutoloadInformationOptimizer
     {
         $vendorDir = $projectRoot . '/vendor';
-        /** @var ClassLoader $projectLoader */
+        /**
+         * @psalm-suppress UnresolvableInclude
+         * @var ClassLoader $projectLoader
+         */
         $projectLoader = require $vendorDir . '/autoload.php';
         if (\Phar::running()) {
             $projectLoader->unregister();
@@ -116,21 +118,22 @@ class AutoloadInformationOptimizer
      * Create a new instance.
      *
      * @param array  $psr0          The list of psr0 autoload information.
-     *
      * @param array  $psr4          The list of psr4 autoload information.
-     *
      * @param array  $classMap      The list of classmap autoload information.
-     *
      * @param array  $includePaths  The list of additional include paths.
-     *
      * @param array  $autoloadFiles The list of additional custom autoload files.
-     *
      * @param array  $whiteList     The list of whitelisted entries (files embedded into the phar).
-     *
      * @param string $projectRoot   The project root path.
      */
-    public function __construct($psr0, $psr4, $classMap, $includePaths, $autoloadFiles, $whiteList, $projectRoot)
-    {
+    public function __construct(
+        array $psr0,
+        array $psr4,
+        array $classMap,
+        array $includePaths,
+        array $autoloadFiles,
+        array $whiteList,
+        string $projectRoot
+    ) {
         $this->psr0          = $psr0;
         $this->psr4          = $psr4;
         $this->classMap      = $classMap;
@@ -160,7 +163,7 @@ class AutoloadInformationOptimizer
      *
      * @return string[]
      */
-    public function getPsr0()
+    public function getPsr0(): array
     {
         return $this->removePrefix($this->psr0);
     }
@@ -170,7 +173,7 @@ class AutoloadInformationOptimizer
      *
      * @return string[]
      */
-    public function getPsr4()
+    public function getPsr4(): array
     {
         return $this->removePrefix($this->psr4);
     }
@@ -180,7 +183,7 @@ class AutoloadInformationOptimizer
      *
      * @return string[]
      */
-    public function getClassmap()
+    public function getClassmap(): array
     {
         return $this->removePrefix($this->classMap);
     }
@@ -190,7 +193,7 @@ class AutoloadInformationOptimizer
      *
      * @return string[]
      */
-    public function getIncludePaths()
+    public function getIncludePaths(): array
     {
         return $this->filterPaths($this->includePaths);
     }
@@ -200,7 +203,7 @@ class AutoloadInformationOptimizer
      *
      * @return string[]
      */
-    public function getAutoloadFiles()
+    public function getAutoloadFiles(): array
     {
         return $this->filterPaths($this->autoloadFiles);
     }
@@ -212,7 +215,7 @@ class AutoloadInformationOptimizer
      *
      * @return array
      */
-    private function removePrefix($array)
+    private function removePrefix(array $array): array
     {
         $result = [];
         foreach ($array as $key => $value) {
@@ -251,7 +254,7 @@ class AutoloadInformationOptimizer
      *
      * @return array
      */
-    private function filterPaths($paths)
+    private function filterPaths(array $paths): array
     {
         $result = [];
         foreach ($paths as $value) {

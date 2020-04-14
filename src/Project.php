@@ -71,6 +71,7 @@ class Project
     public function __construct(ConfigurationValues $configuration, Filter $filters, ComposerInformation $composer)
     {
         $pharFile = $configuration->get('phar');
+        assert(is_string($pharFile));
         if (!\Phar::isValidPharFilename($pharFile)) {
             throw new \RuntimeException('Phar file name is invalid ' . $pharFile);
         }
@@ -96,12 +97,13 @@ class Project
      *
      * @return void
      */
-    public function finalize()
+    public function finalize(): void
     {
         // disabled for interoperability with systems without gzip ext
         $this->phar->compressFiles(\Phar::GZ);
 
         $filename = $this->configuration->get('phar');
+        assert(is_string($filename));
 
         $this->phar->getPharchive()->setAlias(basename($filename));
 
@@ -118,7 +120,7 @@ class Project
      *
      * @return Phar
      */
-    public function getPhar()
+    public function getPhar(): Phar
     {
         return $this->phar;
     }
@@ -128,7 +130,7 @@ class Project
      *
      * @return ComposerInformation
      */
-    public function getComposer()
+    public function getComposer(): ComposerInformation
     {
         return $this->composer;
     }
@@ -138,7 +140,7 @@ class Project
      *
      * @return ConfigurationValues
      */
-    public function getConfiguration()
+    public function getConfiguration(): ConfigurationValues
     {
         return $this->configuration;
     }
@@ -148,7 +150,7 @@ class Project
      *
      * @return Filter
      */
-    public function getFilters()
+    public function getFilters(): Filter
     {
         return $this->filters;
     }

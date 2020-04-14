@@ -1,0 +1,39 @@
+phpcq:
+  repositories:
+    - https://phpcq.github.io/repository/repository.json
+  directories:
+    - src
+    - tests
+  artifact: .phpcq/build
+  tools:
+    phpunit:
+      version: ^9.0
+    psalm:
+      version: ^3.10.0
+    composer-require-checker:
+      version: ^2.0.0
+    phpmd:
+      version: ^2.8.2
+    phpcpd:
+      version: ^5.0
+    phploc:
+      version: ^6.0
+
+phpunit:
+  custom_flags:
+
+phpcpd:
+
+phploc:
+
+phpmd:
+  ruleset:
+    - codesize
+    - controversial
+    - naming
+    - unusedcode
+
+psalm:
+
+composer-require-checker:
+  config_file: '.composer-require-checker.json'

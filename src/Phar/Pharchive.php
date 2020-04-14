@@ -20,6 +20,10 @@
 
 namespace CyberSpectrum\PharPiler\Phar;
 
+use OutOfBoundsException;
+use Phar;
+use RuntimeException;
+
 /**
  * This class is the real abstraction over the phar.
  */
@@ -28,7 +32,7 @@ class Pharchive
     /**
      * The alias.
      *
-     * @var string
+     * @var string|null
      */
     private $alias;
 
@@ -37,7 +41,7 @@ class Pharchive
      *
      * @var string
      */
-    private $stub;
+    private $stub = '';
 
     /**
      * The api version (default to 1.1.0).
@@ -55,7 +59,7 @@ class Pharchive
      *
      * @var int
      */
-    private $flags;
+    private $flags = 0;
 
     /**
      * The flags for the phar signature.
@@ -69,14 +73,14 @@ class Pharchive
      *
      * @var int
      */
-    private $signatureFlags;
+    private $signatureFlags = 0;
 
     /**
      * The meta data.
      *
      * @var array
      */
-    private $metadata;
+    private $metadata = [];
 
     /**
      * The attached files.
@@ -88,9 +92,9 @@ class Pharchive
     /**
      * Retrieve alias.
      *
-     * @return string
+     * @return string|null
      */
-    public function getAlias()
+    public function getAlias(): ?string
     {
         return $this->alias;
     }
@@ -98,11 +102,11 @@ class Pharchive
     /**
      * Set alias.
      *
-     * @param string $alias The new value.
+     * @param string|null $alias The new value.
      *
      * @return Pharchive
      */
-    public function setAlias($alias)
+    public function setAlias(?string $alias): self
     {
         $this->alias = $alias;
 
@@ -114,7 +118,7 @@ class Pharchive
      *
      * @return string
      */
-    public function getStub()
+    public function getStub(): string
     {
         return $this->stub;
     }
@@ -122,13 +126,13 @@ class Pharchive
     /**
      * Set the stub.
      *
-     * @param mixed $stub The new value.
+     * @param string $stub The new value.
      *
      * @return Pharchive
      */
-    public function setStub($stub)
+    public function setStub(string $stub): self
     {
-        $this->stub = (string) $stub;
+        $this->stub = $stub;
 
         return $this;
     }
@@ -138,7 +142,7 @@ class Pharchive
      *
      * @return int
      */
-    public function getApiVersion()
+    public function getApiVersion(): int
     {
         return $this->apiVersion;
     }
@@ -146,9 +150,9 @@ class Pharchive
     /**
      * Retrieve api version as string.
      *
-     * @return int
+     * @return string
      */
-    public function getApiVersionString()
+    public function getApiVersionString(): string
     {
         return $this->decodePharVersion($this->getApiVersion());
     }
@@ -201,7 +205,7 @@ class Pharchive
      */
     public function hasGzCompressedFiles()
     {
-        return (bool) ($this->flags & \Phar::GZ);
+        return (bool) ($this->flags & Phar::GZ);
     }
 
     /**
@@ -211,7 +215,7 @@ class Pharchive
      */
     public function hasBz2CompressedFiles()
     {
-        return (bool) ($this->flags & \Phar::BZ2);
+        return (bool) ($this->flags & Phar::BZ2);
     }
 
     /**
@@ -219,7 +223,7 @@ class Pharchive
      *
      * @return bool
      */
-    public function isSigned()
+    public function isSigned(): bool
     {
         return (bool) ($this->flags & 0x00010000);
     }
@@ -229,7 +233,7 @@ class Pharchive
      *
      * @return array
      */
-    public function getMetadata()
+    public function getMetadata(): array
     {
         return $this->metadata;
     }
@@ -241,7 +245,7 @@ class Pharchive
      *
      * @return Pharchive
      */
-    public function setMetadata($metadata)
+    public function setMetadata($metadata): self
     {
         $this->metadata = $metadata;
 
@@ -253,7 +257,7 @@ class Pharchive
      *
      * @return FileEntry[]
      */
-    public function getFiles()
+    public function getFiles(): array
     {
         return array_values($this->files);
     }
@@ -265,7 +269,7 @@ class Pharchive
      *
      * @return Pharchive
      */
-    public function addFile(FileEntry $file)
+    public function addFile(FileEntry $file): self
     {
         $this->files[spl_object_hash($file)] = $file;
 
@@ -279,7 +283,7 @@ class Pharchive
      *
      * @return Pharchive
      */
-    public function removeFile(FileEntry $file)
+    public function removeFile(FileEntry $file): self
     {
         unset($this->files[spl_object_hash($file)]);
 
@@ -291,7 +295,7 @@ class Pharchive
      *
      * @return int
      */
-    public function getSignatureFlags()
+    public function getSignatureFlags(): int
     {
         return $this->signatureFlags;
     }
@@ -303,7 +307,7 @@ class Pharchive
      *
      * @return Pharchive
      */
-    public function setSignatureFlags($signatureType)
+    public function setSignatureFlags($signatureType): self
     {
         $this->signatureFlags = $signatureType;
 
@@ -321,37 +325,37 @@ class Pharchive
      *
      * @return string
      *
-     * @throws \RuntimeException When the phar is not signed.
-     * @throws \RuntimeException When the signature flags are not understood.
+     * @throws RuntimeException When the phar is not signed.
+     * @throws RuntimeException When the signature flags are not understood.
      */
-    public function getSignatureAlgorithm()
+    public function getSignatureAlgorithm(): string
     {
         if (!$this->isSigned()) {
-            throw new \RuntimeException('Phar is not signed.');
+            throw new RuntimeException('Phar is not signed.');
         }
 
         switch ($this->signatureFlags) {
-            case \Phar::MD5:
+            case Phar::MD5:
                 // MD5 signature
                 return 'md5';
 
-            case \Phar::SHA1:
+            case Phar::SHA1:
                 // SHA1 signature
                 return 'sha1';
 
-            case \Phar::SHA256:
+            case Phar::SHA256:
                 // SHA256 signature (introduced with API version 1.1.0$).
                 $this->checkHashApiVersion('sha256', '1.1.0');
                 return 'sha256';
 
-            case \Phar::SHA512:
+            case Phar::SHA512:
                 // SHA512 signature (introduced with API version 1.1.0).
                 $this->checkHashApiVersion('sha512', '1.1.0');
                 return 'sha512';
             default:
         }
 
-        throw new \RuntimeException('Unknown signature algorithm in flags ' . dechex($this->signatureFlags));
+        throw new RuntimeException('Unknown signature algorithm in flags ' . dechex($this->signatureFlags));
     }
 
     /**
@@ -359,37 +363,37 @@ class Pharchive
      *
      * @return int
      *
-     * @throws \RuntimeException When the phar is not signed.
-     * @throws \RuntimeException When the signature flags are not understood.
+     * @throws RuntimeException When the phar is not signed.
+     * @throws RuntimeException When the signature flags are not understood.
      */
-    public function getSignatureLength()
+    public function getSignatureLength(): int
     {
         if (!$this->isSigned()) {
-            throw new \RuntimeException('Phar is not signed.');
+            throw new RuntimeException('Phar is not signed.');
         }
 
         switch ($this->signatureFlags) {
-            case \Phar::MD5:
+            case Phar::MD5:
                 // MD5 signature
                 return 16;
 
-            case \Phar::SHA1:
+            case Phar::SHA1:
                 // SHA1 signature
                 return 20;
 
-            case \Phar::SHA256:
+            case Phar::SHA256:
                 // SHA256 signature (introduced with API version 1.1.0).
                 $this->checkHashApiVersion('sha256', '1.1.0');
                 return 32;
 
-            case \Phar::SHA512:
+            case Phar::SHA512:
                 // SHA512 signature (introduced with API version 1.1.0).
                 $this->checkHashApiVersion('sha512', '1.1.0');
                 return 64;
             default:
         }
 
-        throw new \RuntimeException('Unknown signature algorithm in flags ' . dechex($this->signatureFlags));
+        throw new RuntimeException('Unknown signature algorithm in flags ' . dechex($this->signatureFlags));
     }
 
     /**
@@ -401,13 +405,13 @@ class Pharchive
      *
      * @return void
      *
-     * @throws \RuntimeException When the current api version is lower than the introducing api version.
+     * @throws RuntimeException When the current api version is lower than the introducing api version.
      */
-    private function checkHashApiVersion($hash, $version)
+    private function checkHashApiVersion($hash, $version): void
     {
         $apiVersion = $this->getApiVersionString();
         if (version_compare($apiVersion, $version, '<')) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 sprintf(
                     'Phar API version is %s but phar indicates to be signed with %s which got introduced in %s.',
                     $apiVersion,
@@ -421,33 +425,33 @@ class Pharchive
     /**
      * Encode the passed phar version.
      *
-     * @param array|string $version The version either as 3-element array or dot separated string.
+     * @param string[]|string $version The version either as 3-element array or dot separated string.
      *
      * @return int
      *
-     * @throws \RuntimeException When the version string could not be parsed or is neither array nor string.
+     * @throws RuntimeException When the version string could not be parsed or is neither array nor string.
+     *
+     * @psalm-param mixed $version
      */
-    private function encodePharVersion($version)
+    private function encodePharVersion($version): int
     {
-        if (is_string($version)) {
-            $chunks = explode('.', $version, 3);
-            foreach ($chunks as $nibble) {
-                if (!preg_match('#^[0-9]+$#', $nibble)) {
-                    throw new \RuntimeException('Invalid version string ' . $version);
-                }
+        if (!is_array($version)) {
+            if (!is_string($version)) {
+                throw new RuntimeException('Version must be either a string or array.');
             }
-
-            $version = $chunks;
+            $version = explode('.', $version, 3);
         }
 
-        if (!is_array($version)) {
-            throw new \RuntimeException('Version must be either a string or array.');
+        foreach ($version as $nibble) {
+            if (!preg_match('#^[0-9]+$#', $nibble)) {
+                throw new RuntimeException('Invalid version string ' . implode('.', $version));
+            }
         }
 
         $nibbles = array_map(function ($nibble) {
             $nibble = intval($nibble);
             if ($nibble > 15) {
-                throw new \OutOfBoundsException('Invalid version field ' . $nibble . ' must be between 0 and 15');
+                throw new OutOfBoundsException('Invalid version field ' . $nibble . ' must be between 0 and 15');
             }
 
             return $nibble;
@@ -463,11 +467,13 @@ class Pharchive
      *
      * @return string
      */
-    private function decodePharVersion($version)
+    private function decodePharVersion($version): string
     {
-        $nibbles[0] = (($version >> 12) & 0xF);
-        $nibbles[1] = (($version >> 8) & 0xF);
-        $nibbles[2] = (($version >> 4) & 0xF);
+        $nibbles = [
+            (($version >> 12) & 0xF),
+            (($version >> 8) & 0xF),
+            (($version >> 4) & 0xF)
+        ];
 
         return implode('.', $nibbles);
     }

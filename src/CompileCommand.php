@@ -41,6 +41,8 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
  * This class is the cli command for all compilation.
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 class CompileCommand extends Command
 {
@@ -61,7 +63,7 @@ class CompileCommand extends Command
     /**
      * {@inheritDoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('compile')
@@ -85,11 +87,13 @@ class CompileCommand extends Command
     {
         $this->logger = new ConsoleLogger($output);
 
+        /** @psalm-suppress PossiblyInvalidArgument */
         $baseDir       = str_replace(DIRECTORY_SEPARATOR, '/', dirname($input->getArgument('composer')));
         $information   = new ComposerInformation($baseDir);
         $processor     = new Processor();
         $configuration = new Configuration();
-        $processed     = $processor->processConfiguration(
+        /** @psalm-suppress PossiblyInvalidArgument */
+        $processed = $processor->processConfiguration(
             $configuration,
             $this->loadConfiguration($input->getArgument('file'))
         );
@@ -175,7 +179,7 @@ class CompileCommand extends Command
      */
     private function buildTasks($config)
     {
-        foreach ($config->get('tasks') as $taskConfig) {
+        foreach ((array) $config->get('tasks') as $taskConfig) {
             $this->logger->info('new task of type ' . $taskConfig['type']);
             switch ($taskConfig['type']) {
                 case 'run-process':
@@ -246,7 +250,7 @@ class CompileCommand extends Command
     private function buildFilters($config)
     {
         $collections = [];
-        foreach ($config->get('rewrites') as $filterConfig) {
+        foreach ((array) $config->get('rewrites') as $filterConfig) {
             $filters = [];
             foreach ($filterConfig['filter'] as $filter) {
                 $this->logger->info('instantiate filter ' . $filter['type']);

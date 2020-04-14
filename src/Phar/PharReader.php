@@ -20,8 +20,14 @@
 
 namespace CyberSpectrum\PharPiler\Phar;
 
+use DateTime;
+use RuntimeException;
+use UnexpectedValueException;
+
 /**
  * This class is the real abstraction over the phar.
+ *
+ * @psalm-suppress MissingConstructor
  */
 class PharReader
 {
@@ -62,7 +68,7 @@ class PharReader
      *
      * @return Pharchive
      */
-    public function load($filename)
+    public function load(string $filename): Pharchive
     {
         $this->file = new StreamReader($filename);
         $this->phar = new Pharchive();
@@ -88,15 +94,12 @@ class PharReader
      *
      * @return void
      *
-     * @throws \RuntimeException When the manifest is larger than 100MB (hardcoded limit in PHP).
-     *
-     * @throws \UnexpectedValueException When the manifest header is truncated.
-     *
-     * @throws \RuntimeException When the API version is not understood.
-     *
-     * @throws \UnexpectedValueException When the file length is smaller than the offset of the file contents.
+     * @throws RuntimeException When the manifest is larger than 100MB (hardcoded limit in PHP).
+     * @throws UnexpectedValueException When the manifest header is truncated.
+     * @throws RuntimeException When the API version is not understood.
+     * @throws UnexpectedValueException When the file length is smaller than the offset of the file contents.
      */
-    private function readHead()
+    private function readHead(): void
     {
         $this->detectStub();
 
@@ -106,12 +109,12 @@ class PharReader
         if ($manifestLength > (1048576 * 100)) {
             // Prevent serious memory issues by limiting manifest to at most 100 MB in length.
             // See also: https://github.com/php/php-src/blob/12ff95/ext/phar/phar.c#L719
-            throw new \RuntimeException('manifest cannot be larger than 100 MB');
+            throw new RuntimeException('manifest cannot be larger than 100 MB');
         }
 
         $this->file->savePosition();
         if ($manifestLength < 10 || $manifestLength != strlen($this->file->read($manifestLength))) {
-            throw new \UnexpectedValueException('internal corruption of phar (truncated manifest header)');
+            throw new UnexpectedValueException('internal corruption of phar (truncated manifest header)');
         }
         // Back to where we took off.
         $this->file->loadPosition();
@@ -120,9 +123,9 @@ class PharReader
         $apiVersion     = $this->file->readUint16be();
 
         if (($apiVersion & 0xFFF0) > self::MAX_API_VERSION) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 sprintf(
-                    'Unable to process phar file, unsupported API version ',
+                    'Unable to process phar file, unsupported API version %1$s.%2$s.%3$s',
                     ($apiVersion >> 12),
                     (($apiVersion >> 8) & 0xF),
                     (($apiVersion >> 4) & 0x0F)
@@ -142,7 +145,7 @@ class PharReader
         $this->binOffset = (strlen($this->phar->getStub()) + $manifestLength + 4);
 
         if ($this->file->getLength() < $this->binOffset) {
-            throw new \UnexpectedValueException('internal corruption of phar (truncated manifest header)');
+            throw new UnexpectedValueException('internal corruption of phar (truncated manifest header)');
         }
     }
 
@@ -151,14 +154,14 @@ class PharReader
      *
      * @return void
      *
-     * @throws \RuntimeException When the stub is invalid.
+     * @throws RuntimeException When the stub is invalid.
      */
-    private function detectStub()
+    private function detectStub(): void
     {
         $buffer = '';
         do {
             if ('' === ($chunk = $this->file->read(1024, true))) {
-                throw new \RuntimeException('Could not detect the stub\'s end in the phar');
+                throw new RuntimeException('Could not detect the stub\'s end in the phar');
             }
             $buffer .= $chunk;
             unset($chunk);
@@ -175,9 +178,9 @@ class PharReader
      *
      * @return void
      *
-     * @throws \RuntimeException When the signature is invalid.
+     * @throws RuntimeException When the signature is invalid.
      */
-    private function checkSignature()
+    private function checkSignature(): void
     {
         // Validate the signature if any.
         if (!$this->phar->isSigned()) {
@@ -189,7 +192,7 @@ class PharReader
 
         // Hail Greg Beaver and Marcus Bürger.
         if ('GBMB' !== $this->file->seek(-4, SEEK_END)->read(4)) {
-            throw new \RuntimeException('Phar signature does not contain magic value.');
+            throw new RuntimeException('Phar signature does not contain magic value.');
         }
 
         $this->phar->setSignatureFlags($this->file->seek(-8, SEEK_END)->readUint32le());
@@ -201,7 +204,7 @@ class PharReader
 
         // Now validate the signature.
         if (hash($algorithm, $data, true) !== $signature) {
-            throw new \RuntimeException('Invalid signature.');
+            throw new RuntimeException('Invalid signature.');
         }
 
         // Back to where we took off.
@@ -215,17 +218,17 @@ class PharReader
      *
      * @return FileEntry
      *
-     * @throws \RuntimeException When the file name length in the dictionary is zero (corrupted dictionary).
+     * @throws RuntimeException When the file name length in the dictionary is zero (corrupted dictionary).
      */
-    private function readFile($fileBinaryOffset)
+    private function readFile(int $fileBinaryOffset): FileEntry
     {
         $filenameLength = $this->file->readUint32le();
         if (0 === $filenameLength) {
-            throw new \RuntimeException('Unnamed file found.');
+            throw new RuntimeException('Unnamed file found.');
         }
         $filename             = $this->file->read($filenameLength);
         $fileSizeUncompressed = $this->file->readUint32le();
-        $timestamp            = new \DateTime('@' . $this->file->readUint32le());
+        $timestamp            = new DateTime('@' . $this->file->readUint32le());
         $fileSizeCompressed   = $this->file->readUint32le();
         $crc                  = $this->file->readUint32le();
         $flags                = $this->file->readUint32le();

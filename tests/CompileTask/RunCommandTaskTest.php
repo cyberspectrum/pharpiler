@@ -44,7 +44,7 @@ class RunCommandTaskTest extends TestCase
 
         $task = new RunCommandTask(
             [
-                'command'     => 'echo "hello world"',
+                'command'     => ['echo', 'hello world'],
                 'working_dir' => getcwd(),
                 'timeout'     => null
             ]
@@ -56,8 +56,8 @@ class RunCommandTaskTest extends TestCase
         $task->execute($project);
 
         $this->assertEquals(
-            '[info] echo "hello world": hello world' . "\n" .
-            '[info] echo "hello world": ' . "\n",
+            '[info] \'echo\' \'hello world\': hello world' . "\n" .
+            '[info] \'echo\' \'hello world\': ' . "\n",
             $output->fetch()
         );
     }

@@ -59,6 +59,9 @@ class PharReaderTest extends TestCase
      */
     public function testReading($compression, $signatureName, $signatureFlag)
     {
+        if (ini_get('phar.readonly')) {
+            $this->markTestSkipped('Test disabled by the php.ini setting phar.readonly');
+        }
         $pharfile = $this->getTempFile('temp.phar');
 
         $phar = new \Phar($pharfile, 0, 'temp.phar');
@@ -101,6 +104,9 @@ EOF
      */
     public function testReadingEntirePharCompressed($compression, $signatureName, $signatureFlag)
     {
+        if (ini_get('phar.readonly')) {
+            $this->markTestSkipped('Test disabled by the php.ini setting phar.readonly');
+        }
         $pharfile = $this->getTempFile('temp.phar');
 
         $phar = new \Phar($pharfile, 0, 'temp.phar');

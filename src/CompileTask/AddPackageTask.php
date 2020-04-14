@@ -95,6 +95,7 @@ class AddPackageTask extends AbstractTask
      */
     public function __construct($config)
     {
+        parent::__construct();
         $this->name                = $config['name'];
         $this->includeRequire      = $config['include_require'];
         $this->includeRequireDev   = $config['include_requiredev'];
@@ -108,7 +109,7 @@ class AddPackageTask extends AbstractTask
     /**
      * {@inheritDoc}
      */
-    public function execute(Project $project)
+    public function execute(Project $project): void
     {
         $composer     = $project->getComposer();
         $packages     = $this->filteredPackages($composer);
@@ -140,7 +141,6 @@ class AddPackageTask extends AbstractTask
      * Prepare a finder instance to process the passed root.
      *
      * @param string $root    The root to process.
-     *
      * @param string $package The package name.
      *
      * @return \Iterator
@@ -157,6 +157,7 @@ class AddPackageTask extends AbstractTask
             $includes = $this->packageOverride[$package]['include_files'];
         }
 
+        /** @psalm-suppress PossiblyInvalidArgument */
         return new FullPathFilterIterator(
             Finder::create()->ignoreDotFiles(false)->files()->in($root)->exclude('vendor')->getIterator(),
             $includes,
@@ -168,9 +169,7 @@ class AddPackageTask extends AbstractTask
      * Apply path overrides to the passed path.
      *
      * @param string $path            The path to process.
-     *
      * @param string $package         The package name.
-     *
      * @param string $packageRelative The relative path to the package root.
      *
      * @return string

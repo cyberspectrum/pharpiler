@@ -20,6 +20,8 @@
 
 namespace CyberSpectrum\PharPiler\Phar;
 
+use RuntimeException;
+
 /**
  * This class is a simple file writer.
  */
@@ -28,17 +30,16 @@ class StreamWriter extends StreamReader
     /**
      * Write the given amount of bytes to the stream.
      *
-     * @param string   $string The string to write.
-     *
-     * @param int|null $bytes  The amount of bytes to write.
+     * @param string|null $string The string to write.
+     * @param int|null    $bytes  The amount of bytes to write.
      *
      * @return StreamWriter
      *
-     * @throws \RuntimeException When not all bytes could be written to the file.
+     * @throws RuntimeException When not all bytes could be written to the file.
      */
-    public function write($string, $bytes = null)
+    public function write(?string $string, $bytes = null): self
     {
-        if (0 === $bytes) {
+        if (null === $string || 0 === $bytes) {
             return $this;
         }
 
@@ -51,7 +52,7 @@ class StreamWriter extends StreamReader
         }
 
         if ($desired !== $written) {
-            throw new \RuntimeException('Failed to write ' . $desired . ' bytes');
+            throw new RuntimeException('Failed to write ' . $desired . ' bytes');
         }
 
         return $this;
@@ -64,7 +65,7 @@ class StreamWriter extends StreamReader
      *
      * @return StreamWriter
      */
-    public function writeUint32le($uint)
+    public function writeUint32le(int $uint): self
     {
         return $this->write(pack('V', $uint));
     }
@@ -76,7 +77,7 @@ class StreamWriter extends StreamReader
      *
      * @return StreamWriter
      */
-    public function writeUint16be($uint)
+    public function writeUint16be(int $uint): self
     {
         return $this->write(pack('n', $uint));
     }
@@ -88,7 +89,7 @@ class StreamWriter extends StreamReader
      *
      * @return StreamWriter
      */
-    public function writeStream(StreamReader $stream)
+    public function writeStream(StreamReader $stream): self
     {
         $stream->savePosition();
         while ('' !== ($buffer = $stream->read(1024, true))) {
@@ -104,10 +105,16 @@ class StreamWriter extends StreamReader
      *
      * @param string $filename The file to open.
      *
-     * @return resource|bool
+     * @return resource
+     *
+     * @throws RuntimeException When the file could not be opened.
      */
-    protected function doOpen($filename)
+    protected function doOpen(string $filename)
     {
-        return fopen($filename, 'wb+');
+        $handle = fopen($filename, 'wb+');
+        if (false === $handle) {
+            throw new RuntimeException('Could not open file ' . $filename);
+        }
+        return $handle;
     }
 }

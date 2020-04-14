@@ -20,6 +20,8 @@
 
 namespace CyberSpectrum\PharPiler\Configuration;
 
+use Closure;
+use InvalidArgumentException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -37,12 +39,8 @@ class Configuration implements ConfigurationInterface
      *
      * @return array
      */
-    public static function flatten($value)
+    public static function flatten(array $value): array
     {
-        if (!is_array($value)) {
-            return $value;
-        }
-
         $new = [];
         foreach ($value as $element) {
             if (is_array($element)) {
@@ -58,11 +56,14 @@ class Configuration implements ConfigurationInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @psalm-suppress PossiblyUndefinedMethod
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('pharpiler');
-        $rootNode    = $treeBuilder->getRootNode();
+        /** @var ArrayNodeDefinition */
+        $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
             ->children()
@@ -77,8 +78,8 @@ class Configuration implements ConfigurationInterface
                     ->prototype('array')
                     ->info('The compile tasks.')
                     ->validate()
-                        ->always(function ($value) {
-                            // We should mark here which values are mandatory for each task type and check the content.
+                        ->always(function (array $value): array {
+                            // FIXME: We should mark here which values are mandatory for each task type and check the content.
                             return $value;
                         })
                     ->end()
@@ -110,9 +111,12 @@ class Configuration implements ConfigurationInterface
      *
      * @return void
      *
-     * @throws \InvalidArgumentException Will be thrown by the nodes when the input was invalid.
+     * @throws InvalidArgumentException Will be thrown by the nodes when the input was invalid.
+     *
+     * @psalm-suppress PossiblyUndefinedMethod
+     * @psalm-suppress PossiblyNullReference
      */
-    private function createRunProcessTaskNodes(NodeBuilder $tasks)
+    private function createRunProcessTaskNodes(NodeBuilder $tasks): void
     {
         $tasks
             ->scalarNode('command')
@@ -120,9 +124,10 @@ class Configuration implements ConfigurationInterface
             ->cannotBeEmpty()
             ->validate()
             ->always(
-                function ($value) {
+                /** @param mixed $value */
+                function ($value): string {
                     if (!is_string($value)) {
-                        throw new \InvalidArgumentException(sprintf('Invalid command string %s', json_encode($value)));
+                        throw new InvalidArgumentException(sprintf('Invalid command string %s', json_encode($value)));
                     }
 
                     return $value;
@@ -135,9 +140,10 @@ class Configuration implements ConfigurationInterface
             ->cannotBeEmpty()
             ->validate()
             ->always(
-                function ($value) {
+                /** @param mixed $value */
+                function ($value): string {
                     if (!is_string($value)) {
-                        throw new \InvalidArgumentException(sprintf('Invalid working dir %s', json_encode($value)));
+                        throw new InvalidArgumentException(sprintf('Invalid working dir %s', json_encode($value)));
                     }
 
                     return $value;
@@ -151,9 +157,10 @@ class Configuration implements ConfigurationInterface
             ->cannotBeEmpty()
             ->validate()
             ->always(
-                function ($value) {
+                /** @param mixed $value */
+                function ($value): string {
                     if (!is_string($value)) {
-                        throw new \InvalidArgumentException(
+                        throw new InvalidArgumentException(
                             sprintf('Invalid environment variable %s', json_encode($value))
                         );
                     }
@@ -168,12 +175,13 @@ class Configuration implements ConfigurationInterface
             ->info('Sets the process timeout (max. runtime). To disable the timeout, set this value to null.')
             ->validate()
             ->always(
-                function ($value) {
+                /** @param string|int|null $value */
+                function ($value): ?int {
                     if (!is_numeric($value) && (null !== $value)) {
-                        throw new \InvalidArgumentException(sprintf('Invalid timeout %s', json_encode($value)));
+                        throw new InvalidArgumentException(sprintf('Invalid timeout %s', json_encode($value)));
                     }
 
-                    return $value;
+                    return (int) $value;
                 }
             )
             ->end()
@@ -185,15 +193,15 @@ class Configuration implements ConfigurationInterface
      *
      * @param string $message The error message to raise when not a string with the value sprintf'ed into it.
      *
-     * @return \Closure
+     * @return Closure(string|int|null): string
      *
-     * @throws \InvalidArgumentException Will be thrown by the closure when the input was invalid.
+     * @throws InvalidArgumentException Will be thrown by the closure when the input was invalid.
      */
-    private function enforceTypeStringCheck($message)
+    private function enforceTypeStringCheck(string $message): Closure
     {
-        return function ($value) use ($message) {
+        return function ($value) use ($message): string {
             if (!is_string($value)) {
-                throw new \InvalidArgumentException(sprintf($message, json_encode($value)));
+                throw new InvalidArgumentException(sprintf($message, json_encode($value)));
             }
 
             return $value;
@@ -205,15 +213,17 @@ class Configuration implements ConfigurationInterface
      *
      * @param string $message The error message to raise when not a array or bool with the value sprintf'ed into it.
      *
-     * @return \Closure
+     * @return Closure
      *
-     * @throws \InvalidArgumentException Will be thrown by the closure when the input was invalid.
+     * @throws InvalidArgumentException Will be thrown by the closure when the input was invalid.
+     *
+     * @psalm-return Closure(mixed): (bool|array)
      */
-    private function enforceTypeArrayOrBoolCheck($message)
+    private function enforceTypeArrayOrBoolCheck(string $message): Closure
     {
         return function ($value) use ($message) {
             if (!is_array($value) && !is_bool($value)) {
-                throw new \InvalidArgumentException(sprintf($message, json_encode($value)));
+                throw new InvalidArgumentException(sprintf($message, json_encode($value)));
             }
 
             return $value;
@@ -227,9 +237,9 @@ class Configuration implements ConfigurationInterface
      *
      * @return void
      *
-     * @throws \InvalidArgumentException Will be thrown by the nodes when the input was invalid.
+     * @throws InvalidArgumentException Will be thrown by the nodes when the input was invalid.
      */
-    private function createAddPackageTaskNodes(NodeBuilder $tasks)
+    private function createAddPackageTaskNodes(NodeBuilder $tasks): void
     {
         $tasks
             ->scalarNode('name')
@@ -317,15 +327,16 @@ class Configuration implements ConfigurationInterface
     /**
      * Create the closure to mangle the "package_override" value of the add-package task.
      *
-     * @return \Closure
+     * @return Closure(bool|int|string|array): array
      *
-     * @throws \InvalidArgumentException Will be thrown by the closure when the input was invalid.
+     * @throws InvalidArgumentException Will be thrown by the closure when the input was invalid.
      */
-    private function createPackageOverrideMangler()
+    private function createPackageOverrideMangler(): Closure
     {
-        return function ($value) {
+        /** @param  $value */
+        return function ($value): array {
             if (!is_array($value)) {
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     sprintf('Invalid value for package_override: %s', json_encode($value))
                 );
             }
@@ -336,15 +347,12 @@ class Configuration implements ConfigurationInterface
                     ['include_files', 'exclude_files', 'rewrite_paths']
                 );
                 if (!empty($unknown)) {
-                    throw new \InvalidArgumentException(
+                    throw new InvalidArgumentException(
                         sprintf('Unknown keys detected for package_override: %s', json_encode($unknown))
                     );
                 }
 
-                foreach ([
-                             'include_files',
-                             'exclude_files'
-                         ] as $key) {
+                foreach (['include_files', 'exclude_files'] as $key) {
                     if (isset($value[$packageName][$key])) {
                         $value[$packageName][$key] = self::flatten($value[$packageName][$key]);
                     }
@@ -362,9 +370,9 @@ class Configuration implements ConfigurationInterface
      *
      * @return void
      *
-     * @throws \InvalidArgumentException Will be thrown by the nodes when the input was invalid.
+     * @throws InvalidArgumentException Will be thrown by the nodes when the input was invalid.
      */
-    private function createSetStubTaskNodes($tasks)
+    private function createSetStubTaskNodes(NodeBuilder $tasks): void
     {
         $tasks
             ->scalarNode('stub_file')
@@ -383,9 +391,9 @@ class Configuration implements ConfigurationInterface
      *
      * @return void
      *
-     * @throws \InvalidArgumentException Will be thrown by the nodes when the input was invalid.
+     * @throws InvalidArgumentException Will be thrown by the nodes when the input was invalid.
      */
-    private function createComposerAutoloadTaskNodes($tasks)
+    private function createComposerAutoloadTaskNodes(NodeBuilder $tasks): void
     {
         $tasks
             ->scalarNode('optimize')
@@ -393,9 +401,10 @@ class Configuration implements ConfigurationInterface
             ->defaultValue(true)
             ->validate()
             ->always(
-                function ($value) {
+                /** @param mixed $value */
+                function ($value): bool {
                     if (!is_bool($value)) {
-                        throw new \InvalidArgumentException(sprintf('Invalid value %s', json_encode($value)));
+                        throw new InvalidArgumentException(sprintf('Invalid value %s', json_encode($value)));
                     }
 
                     return $value;
@@ -410,9 +419,11 @@ class Configuration implements ConfigurationInterface
      *
      * @return void
      *
-     * @throws \InvalidArgumentException Will be thrown by the nodes when the input was invalid.
+     * @throws InvalidArgumentException Will be thrown by the nodes when the input was invalid.
+     *
+     * @psalm-suppress PossiblyUndefinedMethod
      */
-    private function createRewriteRuleNodes(ArrayNodeDefinition $rootNode)
+    private function createRewriteRuleNodes(ArrayNodeDefinition $rootNode): void
     {
         $rootNode
             ->children()
@@ -421,7 +432,7 @@ class Configuration implements ConfigurationInterface
             ->info('The rewrites rules.')
             ->beforeNormalization()
             ->always(
-                function ($value) {
+                function (array $value): array {
                     if (is_array($value['files'])) {
                         return $value;
                     }
@@ -435,7 +446,7 @@ class Configuration implements ConfigurationInterface
             ->end()
             ->validate()
             ->always(
-                function ($value) {
+                function (array $value): array {
                     return $value;
                 }
             )
@@ -458,13 +469,13 @@ class Configuration implements ConfigurationInterface
             ->end()
             ->validate()
             ->always(
-                function ($value) {
+                function (array $value) {
                     if ('replace' === $value['type']) {
                         if (is_string($value['search']) && is_string($value['replace'])) {
                             return $value;
                         }
 
-                        throw new \InvalidArgumentException('Rewrite type "replace" needs "search" and "replace".');
+                        throw new InvalidArgumentException('Rewrite type "replace" needs "search" and "replace".');
                     }
 
                     return $value;
@@ -489,11 +500,11 @@ class Configuration implements ConfigurationInterface
     /**
      * Create the closure to mangle the short notated replace filters into a full array.
      *
-     * @return \Closure
+     * @return Closure
      */
-    private function createReplaceFilterShortNotationMangler()
+    private function createReplaceFilterShortNotationMangler(): Closure
     {
-        return function ($value) {
+        return function (array $value): array {
             // Allow "short notation" for replace filters.
             if (('replace' === $value['type']) && !isset($value['search'])) {
                 $keys = array_diff(

@@ -31,16 +31,16 @@ class RunCommandTask extends AbstractTask
     /**
      * The command to execute.
      *
-     * @var string
+     * @var string[]
      */
     private $command;
 
     /**
      * The working directory.
      *
-     * @var string
+     * @var string|null
      */
-    private $workingDir;
+    private $workingDir = null;
 
     /**
      * The environment variables or null to inherit.
@@ -63,6 +63,7 @@ class RunCommandTask extends AbstractTask
      */
     public function __construct($config)
     {
+        parent::__construct();
         $this->command = $config['command'];
 
         if (isset($config['working_dir'])) {
@@ -83,7 +84,7 @@ class RunCommandTask extends AbstractTask
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function execute(Project $project)
+    public function execute(Project $project): void
     {
         $process = new Process($this->command, $this->workingDir, $this->getEnvironmentVariables());
         $process->setTimeout($this->timeout);
@@ -114,7 +115,7 @@ class RunCommandTask extends AbstractTask
     {
         $processed = [];
         foreach (explode(PHP_EOL, $lines) as $line) {
-            $processed[] = sprintf('<comment>%s</comment>: %s', $this->command, $line);
+            $processed[] = sprintf('<comment>%s</comment>: %s', '\'' . implode('\' \'', $this->command) . '\'', $line);
         }
 
         return $processed;

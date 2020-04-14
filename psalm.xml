@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<psalm
+    totallyTyped="true"
+    errorLevel="2"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config https://psalm.dev/schema/config"
+>
+    <projectFiles>
+        <directory name="src" />
+    </projectFiles>
+    <issueHandlers>
+        <!-- PSR forgot to annotate "@return void" for LoggerAwareTrait::setLogger() -->
+        <MissingReturnType>
+            <errorLevel type="suppress">
+                <file name="vendor/psr/log/Psr/Log/LoggerAwareTrait.php"/>
+            </errorLevel>
+        </MissingReturnType>
+    </issueHandlers>
+</psalm>

@@ -20,8 +20,13 @@
 
 namespace CyberSpectrum\PharPiler\Composer;
 
+use InvalidArgumentException;
+use RuntimeException;
+
 /**
  * This class provides an easy interface to the composer.json and installed.json.
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 class ComposerInformation
 {
@@ -93,14 +98,14 @@ class ComposerInformation
      *
      * @param string $composerRoot Path to the composer project root.
      *
-     * @throws \InvalidArgumentException When the passed directory does not exist or is not a directory.
+     * @throws InvalidArgumentException When the passed directory does not exist or is not a directory.
      */
     public function __construct($composerRoot)
     {
         $composerRoot = str_replace(DIRECTORY_SEPARATOR, '/', realpath($composerRoot) ?: getcwd());
 
         if (!is_dir($composerRoot)) {
-            throw new \InvalidArgumentException('Directory does not exist or is not a directory: ' . $composerRoot);
+            throw new InvalidArgumentException('Directory does not exist or is not a directory: ' . $composerRoot);
         }
 
         $this->composerRoot  = $composerRoot;
@@ -119,9 +124,10 @@ class ComposerInformation
      *
      * @return string[]
      */
-    public function getPackageNames()
+    public function getPackageNames(): array
     {
-        if (!isset($this->packageNames)) {
+        if (empty($this->packageNames)) {
+            $this->packageNames = [];
             foreach ($this->packageArray as $package) {
                 $this->packageNames[] = $package->getName();
             }
@@ -135,7 +141,7 @@ class ComposerInformation
      *
      * @return string
      */
-    public function getRootPackageName()
+    public function getRootPackageName(): string
     {
         return $this->composerJson['name'];
     }
@@ -145,9 +151,9 @@ class ComposerInformation
      *
      * @param string $packageName The package to retrieve.
      *
-     * @return string|null
+     * @return string
      */
-    public function getPackageDirectory($packageName)
+    public function getPackageDirectory(string $packageName): string
     {
         if (!isset($this->packageRoots[$packageName])) {
             return $this->packageRoots[$packageName] = $this->getPackageArray($packageName)->getPackageDirectory();
@@ -163,7 +169,7 @@ class ComposerInformation
      *
      * @return string
      */
-    public function getPackageVersion($packageName)
+    public function getPackageVersion(string $packageName): string
     {
         if (!isset($this->packageVersions[$packageName])) {
             return $this->packageVersions[$packageName] = $this->getPackageArray($packageName)->getVersion();
@@ -179,7 +185,7 @@ class ComposerInformation
      *
      * @return string
      */
-    public function getPackageReleaseDate($packageName)
+    public function getPackageReleaseDate(string $packageName): string
     {
         if (!isset($this->packageReleaseDates[$packageName])) {
             return $this->packageReleaseDates[$packageName] = $this->getPackageArray($packageName)->getReleaseDate();
@@ -199,7 +205,7 @@ class ComposerInformation
      *
      * @return string[]
      */
-    public function getDependencies($package = null, $ignorePackages = [], $recursive = true)
+    public function getDependencies(string $package = null, array $ignorePackages = [], $recursive = true): array
     {
         // Root package.
         if ((null === $package)) {
@@ -221,7 +227,7 @@ class ComposerInformation
      *
      * @return string[]
      */
-    public function getDevDependencies()
+    public function getDevDependencies(): array
     {
         return isset($this->composerJson['require-dev']) ? array_keys($this->composerJson['require-dev']) : [];
     }
@@ -233,7 +239,7 @@ class ComposerInformation
      *
      * @return string
      */
-    public function getPackageType($packageName)
+    public function getPackageType(string $packageName): string
     {
         if (isset($this->packageTypes[$packageName])) {
             return $this->packageTypes[$packageName];
@@ -249,12 +255,12 @@ class ComposerInformation
      *
      * @return PackageInformation
      *
-     * @throws \RuntimeException When a package is not installed.
+     * @throws RuntimeException When a package is not installed.
      */
-    private function getPackageArray($packageName)
+    private function getPackageArray(string $packageName): PackageInformation
     {
         if (!isset($this->packageArray[$packageName])) {
-            throw new \RuntimeException('Package ' . $packageName . ' does not seem to be installed?');
+            throw new RuntimeException('Package ' . $packageName . ' does not seem to be installed?');
         }
 
         return $this->packageArray[$packageName];
@@ -271,7 +277,7 @@ class ComposerInformation
      *
      * @return void
      */
-    private function getDependenciesRecursive($package, $ignorePackages, &$results)
+    private function getDependenciesRecursive(string $package, $ignorePackages, &$results): void
     {
         $dependencies = $this->getPackageArray($package)->getDependencies($ignorePackages);
 
@@ -291,12 +297,12 @@ class ComposerInformation
      *
      * @return array
      *
-     * @throws \InvalidArgumentException When the file can not be found.
+     * @throws InvalidArgumentException When the file can not be found.
      */
-    private function readJson($filename)
+    private function readJson(string $filename): array
     {
         if (!is_file($filename)) {
-            throw new \InvalidArgumentException('File not found: ' . $filename);
+            throw new InvalidArgumentException('File not found: ' . $filename);
         }
 
         return json_decode(file_get_contents($filename), true);
@@ -311,7 +317,7 @@ class ComposerInformation
      *
      * @return void
      */
-    private function addPackage($data, $isRoot = false)
+    private function addPackage(array $data, bool $isRoot = false): void
     {
         $this->packageArray[$data['name']] = new PackageInformation(
             $data['name'],
@@ -354,7 +360,7 @@ class ComposerInformation
      *
      * @return void
      */
-    private function addRequiredPackagesFrom($data, $section)
+    private function addRequiredPackagesFrom(array $data, string $section): void
     {
         if (isset($data[$section])) {
             foreach ($data[$section] as $packageName => $version) {

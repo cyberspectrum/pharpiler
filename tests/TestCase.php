@@ -37,7 +37,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * {@inheritdoc}
      */
-    public function tearDown()
+    public function tearDown(): void
     {
         if (isset($this->workDir)) {
             $filesystem = new Filesystem();

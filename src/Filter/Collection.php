@@ -20,6 +20,7 @@
 
 namespace CyberSpectrum\PharPiler\Filter;
 
+use SplFixedArray;
 use Symfony\Component\Finder\Glob;
 
 /**
@@ -44,7 +45,7 @@ class Collection
     /**
      * The filters.
      *
-     * @var AbstractFilter[]
+     * @var SplFixedArray|AbstractFilter[]
      */
     private $filters;
 
@@ -55,13 +56,13 @@ class Collection
      *
      * @param AbstractFilter[] $filters      The filters to apply.
      */
-    public function __construct(array $matchRegexps, $filters)
+    public function __construct(array $matchRegexps, array $filters)
     {
         foreach ($matchRegexps as $pattern) {
             $this->matchRegexps[] = $this->toRegex($pattern);
         }
 
-        $this->filters = \SplFixedArray::fromArray($filters);
+        $this->filters = SplFixedArray::fromArray($filters);
     }
 
     /**
@@ -71,7 +72,7 @@ class Collection
      *
      * @return bool
      */
-    public function matches($file)
+    public function matches(string $file): bool
     {
         // should at least not match one rule to exclude
         foreach ($this->noMatchRegexps as $regex) {
@@ -101,7 +102,7 @@ class Collection
      *
      * @return string
      */
-    public function process($content)
+    public function process(string $content): string
     {
         foreach ($this->filters as $filter) {
             $content = $filter->apply($content);
@@ -120,7 +121,7 @@ class Collection
      *
      * @return string regexp corresponding to a given glob or regexp
      */
-    protected function toRegex($str)
+    protected function toRegex(string $str): string
     {
         return $this->isRegex($str) ? $str : Glob::toRegex($str, false, false);
     }
@@ -132,7 +133,7 @@ class Collection
      *
      * @return bool Whether the given string is a regex
      */
-    protected function isRegex($str)
+    protected function isRegex(string $str): bool
     {
         if (preg_match('/^(.{3,}?)[imsxuADU]*$/', $str, $matches)) {
             $start = substr($matches[1], 0, 1);

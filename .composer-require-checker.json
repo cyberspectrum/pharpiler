@@ -1,0 +1,21 @@
+{
+  "symbol-whitelist" : [
+    "null", "true", "false",
+    "static", "self", "parent",
+    "array", "string", "int", "float", "bool", "iterable", "callable", "void", "object",
+    "LIBXSLT_DOTTED_VERSION"
+  ],
+  "php-core-extensions" : [
+    "Core",
+    "standard",
+    "SPL",
+    "date",
+    "hash",
+    "tokenizer",
+    "pcre",
+    "bz2",
+    "zlib",
+    "Phar"
+  ],
+  "scan-files" : []
+}

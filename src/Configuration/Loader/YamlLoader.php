@@ -32,10 +32,13 @@ class YamlLoader extends FileLoader
     /**
      * {@inheritDoc}
      *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @SuppressWarnings (PHPMD.UnusedFormalParameter)
+     *
+     * @return array
      */
-    public function load($resource, $type = null)
+    public function load($resource, string $type = null)
     {
+        /** @var string $path */
         $path         = $this->locator->locate($resource);
         $parser       = new Parser();
         $configValues = $parser->parse(file_get_contents($path));
@@ -54,7 +57,7 @@ class YamlLoader extends FileLoader
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function supports($resource, $type = null)
+    public function supports($resource, string $type = null)
     {
         return is_string($resource) && 'yml' === pathinfo($resource, PATHINFO_EXTENSION);
     }
@@ -70,7 +73,7 @@ class YamlLoader extends FileLoader
      *
      * @throws InvalidArgumentException When the imports key is not an array or the elements are not arrays.
      */
-    private function parseImports($content, $file)
+    private function parseImports(array $content, string $file): array
     {
         if (!isset($content['imports'])) {
             return $content;

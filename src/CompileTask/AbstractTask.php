@@ -23,6 +23,7 @@ namespace CyberSpectrum\PharPiler\CompileTask;
 use CyberSpectrum\PharPiler\Project;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerTrait;
+use Psr\Log\NullLogger;
 
 /**
  * This class is the abstract base for all compile tasks.
@@ -31,6 +32,14 @@ abstract class AbstractTask
 {
     use LoggerAwareTrait;
     use LoggerTrait;
+
+    /**
+     * Create a new instance.
+     */
+    public function __construct()
+    {
+        $this->logger = new NullLogger();
+    }
 
     /**
      * {@inheritDoc}
@@ -47,5 +56,5 @@ abstract class AbstractTask
      *
      * @return void
      */
-    abstract public function execute(Project $project);
+    abstract public function execute(Project $project): void;
 }

@@ -32,5 +32,5 @@ abstract class AbstractFilter
      *
      * @return string
      */
-    abstract public function apply($content);
+    abstract public function apply(string $content): string;
 }

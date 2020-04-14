@@ -44,7 +44,7 @@ class ReplaceStringFilter extends AbstractFilter
      *
      * @param array $config The configuration.
      */
-    public function __construct($config)
+    public function __construct(array $config)
     {
         $this->search  = $config['search'];
         $this->replace = $config['replace'];
@@ -53,7 +53,7 @@ class ReplaceStringFilter extends AbstractFilter
     /**
      * {@inheritDoc}
      */
-    public function apply($content)
+    public function apply(string $content): string
     {
         return str_replace($this->search, $this->replace, $content);
     }

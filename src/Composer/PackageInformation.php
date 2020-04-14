@@ -20,6 +20,10 @@
 
 namespace CyberSpectrum\PharPiler\Composer;
 
+use DateTime;
+use DateTimeZone;
+use LogicException;
+use RuntimeException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -38,6 +42,8 @@ class PackageInformation
      * The composer.json data.
      *
      * @var array
+     *
+     * @psalm-var array<string, string|array<string, string>|array<string, array<string, string>>>
      */
     private $data;
 
@@ -62,6 +68,8 @@ class PackageInformation
      * @param string[] $data        The package data.
      * @param string   $installRoot The path to the composer project root dir.
      * @param bool     $isRoot      Boolean flag if the package is the root package.
+     *
+     * @psalm-param array<string, array<string, string>|string> $data
      */
     public function __construct($name, $data, $installRoot, $isRoot = false)
     {
@@ -72,10 +80,11 @@ class PackageInformation
         if ($this->isRoot) {
             $this->installDir = $installRoot;
         } elseif ($this->isReplaced() || $this->isProvided()) {
+            assert(is_string($data['name']));
             $this->installDir = $installRoot . '/vendor/' . $data['name'];
         } else {
             if ('platform' === $this->getType()) {
-                $this->installDir = null;
+                $this->installDir = '/dev/null';
                 return;
             }
             $this->installDir = $installRoot . '/vendor/' . $name;
@@ -87,7 +96,7 @@ class PackageInformation
      *
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -97,15 +106,18 @@ class PackageInformation
      *
      * @return string
      *
-     * @throws \LogicException When the package version can not be determined.
+     * @throws LogicException When the package version can not be determined.
+     *
+     * @psalm-suppress PossiblyInvalidArrayOffset
      */
-    public function getVersion()
+    public function getVersion(): string
     {
         if (!isset($this->data['version_normalized'])) {
             return $this->loadVersionInformationFromGit();
         }
 
         $normalized = $this->data['version_normalized'];
+        assert(is_string($normalized));
         if ('dev-' === substr($normalized, 0, 4)) {
             if (isset($this->data['extra']['branch-alias'][$normalized])) {
                 $normalized = $this->data['extra']['branch-alias'][$normalized];
@@ -129,7 +141,7 @@ class PackageInformation
             return $normalized;
         }
 
-        throw new \LogicException('Unable to determine package version of ' . $this->name);
+        throw new LogicException('Unable to determine package version of ' . $this->name);
     }
 
     /**
@@ -137,11 +149,12 @@ class PackageInformation
      *
      * @return string
      */
-    public function getReleaseDate()
+    public function getReleaseDate(): string
     {
         if (!isset($this->data['time'])) {
             return $this->loadReleaseDateInformationFromGit();
         }
+        assert(is_string($this->data['time']));
 
         return $this->data['time'];
     }
@@ -150,8 +163,12 @@ class PackageInformation
      * Retrieve the package type.
      *
      * @return string
+     *
+     * @psalm-suppress PossiblyInvalidArrayOffset
+     * @psalm-suppress InvalidReturnType
+     * @psalm-suppress InvalidReturnStatement
      */
-    public function getType()
+    public function getType(): string
     {
         if (($this->name === 'php') || (substr($this->name, 0, 4) === 'ext-')) {
             return 'platform';
@@ -170,8 +187,10 @@ class PackageInformation
      * @param string[] $ignorePackages The names of packages that shall be ignored.
      *
      * @return string[]
+     *
+     * @psalm-suppress PossiblyInvalidArgument
      */
-    public function getDependencies($ignorePackages = [])
+    public function getDependencies(array $ignorePackages = []): array
     {
         return array_diff(array_keys(isset($this->data['require']) ? $this->data['require'] : []), $ignorePackages);
     }
@@ -179,9 +198,9 @@ class PackageInformation
     /**
      * Retrieve the package root directory of a package.
      *
-     * @return string|null
+     * @return string
      */
-    public function getPackageDirectory()
+    public function getPackageDirectory(): string
     {
         return $this->installDir;
     }
@@ -189,9 +208,9 @@ class PackageInformation
     /**
      * Check if this package is a replacement.
      *
-     * @return string
+     * @return bool
      */
-    public function isReplaced()
+    public function isReplaced(): bool
     {
         return isset($this->data['replace'][$this->name]);
     }
@@ -199,9 +218,9 @@ class PackageInformation
     /**
      * Check if this package is a replacement.
      *
-     * @return string
+     * @return bool
      */
-    public function isProvided()
+    public function isProvided(): bool
     {
         return isset($this->data['provide'][$this->name]);
     }
@@ -211,18 +230,20 @@ class PackageInformation
      *
      * @return string
      *
-     * @throws \RuntimeException When the git repository is invalid or git executable can not be run.
+     * @throws RuntimeException When the git repository is invalid or git executable can not be run.
+     *
+     * @psalm-suppress PossiblyInvalidArrayOffset
      */
     private function loadVersionInformationFromGit(): string
     {
         $process = new Process(['git', 'describe', '--tags', '--exact-match', 'HEAD'], $this->getPackageDirectory());
-        if ($process->run() == 0) {
+        if ($process->run() === 0) {
             return trim($process->getOutput());
         }
 
         $process = new Process(['git', 'log', '--pretty="%h"', '-n1', 'HEAD'], $this->getPackageDirectory());
-        if ($process->run() != 0) {
-            throw new \RuntimeException(
+        if ($process->run() !== 0) {
+            throw new RuntimeException(
                 'Can\'t run git log in ' . $this->getPackageDirectory() . '. ' .
                 'Ensure to run compile from git repository clone and that git binary is available.'
             );
@@ -231,9 +252,9 @@ class PackageInformation
         $version = trim($process->getOutput());
 
         $process = new Process(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], $this->getPackageDirectory());
-        if ($process->run() == 0) {
+        if ($process->run() === 0) {
             $branch = 'dev-' . trim($process->getOutput());
-            if (isset($this->data['extra']['branch-alias'][$branch])) {
+            if (array_key_exists($branch, $this->data['extra']['branch-alias'])) {
                 $version = $this->data['extra']['branch-alias'][$branch] . '#' . $version;
             }
         }
@@ -246,20 +267,20 @@ class PackageInformation
      *
      * @return string
      *
-     * @throws \RuntimeException When the git repository is invalid or git executable can not be run.
+     * @throws RuntimeException When the git repository is invalid or git executable can not be run.
      */
-    private function loadReleaseDateInformationFromGit()
+    private function loadReleaseDateInformationFromGit(): string
     {
         $process = new Process(['git', 'log', '-n1', '--pretty=%ci', 'HEAD'], $this->getPackageDirectory());
         if ($process->run() != 0) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'Can\'t run git log in ' . $this->getPackageDirectory() . '. ' .
                 'Ensure to run compile from git repository clone and that git binary is available.'
             );
         }
 
-        $date = new \DateTime(trim($process->getOutput()));
-        $date->setTimezone(new \DateTimeZone('UTC'));
+        $date = new DateTime(trim($process->getOutput()));
+        $date->setTimezone(new DateTimeZone('UTC'));
 
         return $date->format('Y-m-d H:i:s');
     }
@@ -273,7 +294,7 @@ class PackageInformation
      *
      * @return string
      */
-    private function makeVersion($version, $fallback)
+    private function makeVersion(string $version, string $fallback): string
     {
         if ($version === 'self.version') {
             return $fallback;

@@ -6,6 +6,7 @@
   "require": {
     "php": "^7.3",
     "ext-json": "*",
+    "ext-pcre": "*",
     "psr/log": "^1.0",
     "symfony/config": "^5.0",
     "symfony/console": "^5.0",
@@ -13,6 +14,11 @@
     "symfony/dependency-injection": "^5.0",
     "symfony/process": "^5.0",
     "symfony/yaml": "^5.0"
+  },
+  "require-dev": {
+    "ext-Phar": "*",
+    "ext-bz2": "*",
+    "ext-zlib": "*"
   },
   "autoload": {
     "psr-4": {

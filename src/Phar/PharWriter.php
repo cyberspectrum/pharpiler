@@ -20,8 +20,12 @@
 
 namespace CyberSpectrum\PharPiler\Phar;
 
+use RuntimeException;
+
 /**
  * This class builds a phar.
+ *
+ * @psalm-suppress MissingConstructor
  */
 class PharWriter
 {
@@ -55,9 +59,9 @@ class PharWriter
      *
      * @return void
      *
-     * @throws \RuntimeException When the stub is illegal.
+     * @throws RuntimeException When the stub is illegal.
      */
-    public function save($phar, $filename)
+    public function save(Pharchive $phar, string $filename)
     {
         $this->phar = $phar;
         $this->file = new StreamWriter($filename);
@@ -66,7 +70,7 @@ class PharWriter
         $stub = $phar->getStub();
 
         if (false === ($pos = strpos($stub, '__HALT_COMPILER();'))) {
-            throw new \RuntimeException('Illegal stub');
+            throw new RuntimeException('Illegal stub');
         }
         // Mimic plain PHP phar writing, it adds the closing tag.
         $this->file->write(substr($stub, 0, ($pos + 18)) . " ?>\r\n");
@@ -96,23 +100,21 @@ class PharWriter
      *
      * @return void
      */
-    private function buildManifest()
+    private function buildManifest(): void
     {
         $files    = $this->phar->getFiles();
         $alias    = $this->phar->getAlias();
         $metaData = $this->phar->getMetadata();
-        if (!empty($metaData)) {
-            $metaData = serialize($metaData);
-        }
+        $metaData = !empty($metaData) ? serialize($metaData) : '';
 
         $manifest = new StreamWriter('php://temp');
         $manifest
             ->writeUint32le(count($files))
             ->writeUint16be($this->phar->getApiVersion())
             ->writeUint32le($this->phar->getFlags())
-            ->writeUint32le(strlen($alias))
+            ->writeUint32le(null !== $alias ? strlen($alias) : 0)
             ->write($alias)
-            ->writeUint32le(strlen($metaData))
+            ->writeUint32le($metaData ? strlen($metaData) : 0)
             ->write($metaData);
 
         // Add files now.
@@ -131,15 +133,13 @@ class PharWriter
      *
      * @return StreamWriter
      */
-    private function serializeFile(FileEntry $file)
+    private function serializeFile(FileEntry $file): StreamWriter
     {
         $result = new StreamWriter('php://temp');
 
         $fileName = $file->getFilename();
         $metaData = $file->getMetadata();
-        if (!empty($metaData)) {
-            $metaData = serialize($metaData);
-        }
+        $metaData = !empty($metaData) ? serialize($metaData) : '';
 
         $result
             ->writeUint32le(strlen($fileName))
@@ -149,7 +149,7 @@ class PharWriter
             ->writeUint32le($file->getSizeCompressed())
             ->writeUint32le($file->getCrc())
             ->writeUint32le($file->getFlags())
-            ->writeUint32le(strlen($metaData))
+            ->writeUint32le($metaData ? strlen($metaData) : 0)
             ->write($metaData)
             ->seek(0);
 

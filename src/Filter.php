@@ -21,6 +21,7 @@
 namespace CyberSpectrum\PharPiler;
 
 use CyberSpectrum\PharPiler\Filter\Collection;
+use SplFixedArray;
 
 /**
  * This class is a simple delegator to filters.
@@ -30,7 +31,7 @@ class Filter
     /**
      * The filter rule collections.
      *
-     * @var Collection[]
+     * @var SplFixedArray|Collection[]
      */
     private $collections;
 
@@ -41,7 +42,7 @@ class Filter
      */
     public function __construct($collections)
     {
-        $this->collections = \SplFixedArray::fromArray($collections);
+        $this->collections = SplFixedArray::fromArray($collections);
     }
 
     /**
@@ -53,7 +54,7 @@ class Filter
      *
      * @return string
      */
-    public function process($fileName, $content)
+    public function process(string $fileName, string $content): string
     {
         foreach ($this->collections as $collection) {
             if ($collection->matches($fileName)) {

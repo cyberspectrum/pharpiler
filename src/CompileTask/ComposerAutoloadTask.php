@@ -34,7 +34,7 @@ class ComposerAutoloadTask extends AbstractTask
     /**
      * The Flag if the autoload information should be optimized.
      *
-     * @var string
+     * @var bool
      */
     private $optimize;
 
@@ -45,13 +45,14 @@ class ComposerAutoloadTask extends AbstractTask
      */
     public function __construct($config)
     {
+        parent::__construct();
         $this->optimize = isset($config['optimize']) && $config['optimize'];
     }
 
     /**
      * {@inheritDoc}
      */
-    public function execute(Project $project)
+    public function execute(Project $project): void
     {
         if (!$this->optimize) {
             $this->addUnoptimized($project);
@@ -67,7 +68,7 @@ class ComposerAutoloadTask extends AbstractTask
      *
      * @return void
      */
-    private function addUnoptimized(Project $project)
+    private function addUnoptimized(Project $project): void
     {
         $this->warning('Autoloader not optimized...');
         $root   = $project->getComposer()->getPackageDirectory($project->getComposer()->getRootPackageName());
@@ -96,7 +97,7 @@ class ComposerAutoloadTask extends AbstractTask
      *
      * @return void
      */
-    private function addOptimized(Project $project)
+    private function addOptimized(Project $project): void
     {
         $this->info('Optimizing autoloader...');
 

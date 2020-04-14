@@ -20,8 +20,16 @@
 
 namespace CyberSpectrum\PharPiler\Phar;
 
+use DateTime;
+use InvalidArgumentException;
+use LogicException;
+use Phar;
+use RuntimeException;
+
 /**
  * This class is the abstraction over phar file entries.
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 class FileEntry
 {
@@ -68,28 +76,28 @@ class FileEntry
     /**
      * The crc32 hash.
      *
-     * @var string
+     * @var int|null
      */
     private $crc;
 
     /**
      * The timestamp.
      *
-     * @var \DateTime
+     * @var DateTime
      */
     private $timestamp;
 
     /**
      * Buffer holding the compressed content.
      *
-     * @var string
+     * @var string|null
      */
     private $content;
 
     /**
      * Buffer holding the uncompressed content.
      *
-     * @var string
+     * @var string|null
      */
     private $uncompressedContent;
 
@@ -98,7 +106,7 @@ class FileEntry
      */
     public function __construct()
     {
-        $this->timestamp = new \DateTime();
+        $this->timestamp = new DateTime();
         $this->setPermissions(0666);
     }
 
@@ -106,36 +114,28 @@ class FileEntry
      * Create a new instance with values originating from a phar archive.
      *
      * @param string     $filename             The filename.
-     *
      * @param int        $fileSizeUncompressed The uncompressed file size.
-     *
      * @param int        $fileSizeCompressed   The compressed file size.
-     *
-     * @param \DateTime  $timestamp            The timestamp.
-     *
-     * @param string     $crc                  The crc32 hash.
-     *
+     * @param DateTime   $timestamp            The timestamp.
+     * @param int|null   $crc                  The crc32 hash.
      * @param int        $flags                The file flags.
-     *
      * @param array|null $metadata             The meta data or null when no meta data present.
-     *
      * @param string     $content              The file content (compressed or uncompressed according to flags).
      *
      * @return FileEntry
      *
-     * @throws \RuntimeException Whrn the CRC is invalid.
-     *
-     * @throws \RuntimeException When the real file size does not match the passed file size.
+     * @throws RuntimeException When the CRC is invalid.
+     * @throws RuntimeException When the real file size does not match the passed file size.
      */
     public static function createFromPhar(
-        $filename,
-        $fileSizeUncompressed,
-        $fileSizeCompressed,
-        $timestamp,
-        $crc,
-        $flags,
-        $metadata,
-        $content
+        string $filename,
+        int $fileSizeUncompressed,
+        int $fileSizeCompressed,
+        DateTime $timestamp,
+        ?int $crc,
+        int $flags,
+        ?array $metadata,
+        string $content
     ) {
         $instance                   = new static();
         $instance->filename         = $filename;
@@ -147,13 +147,13 @@ class FileEntry
         $instance->metadata         = $metadata;
         $instance->filename         = $filename;
 
-        if ($instance->getCompression() === \Phar::NONE) {
+        if ($instance->getCompression() === Phar::NONE) {
             $instance->uncompressedContent = $content;
             $desiredFileSize               = $fileSizeUncompressed;
 
             // Check the crc now.
             if (crc32($content) !== $crc) {
-                throw new \RuntimeException('CRC mismatch for ' . $filename);
+                throw new RuntimeException('CRC mismatch for ' . $filename);
             }
         } else {
             $instance->content = $content;
@@ -161,7 +161,7 @@ class FileEntry
         }
 
         if (strlen($content) !== $desiredFileSize) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 sprintf(
                     'Compressed file size does not match specified file length %d !== %d',
                     strlen($content),
@@ -178,7 +178,7 @@ class FileEntry
      *
      * @return string
      */
-    public function getFilename()
+    public function getFilename(): string
     {
         return $this->filename;
     }
@@ -190,7 +190,7 @@ class FileEntry
      *
      * @return FileEntry
      */
-    public function setFilename($filename)
+    public function setFilename(string $filename): self
     {
         $this->filename = ltrim($filename, '/');
 
@@ -200,9 +200,9 @@ class FileEntry
     /**
      * Retrieve metadata
      *
-     * @return array
+     * @return array|null
      */
-    public function getMetadata()
+    public function getMetadata(): ?array
     {
         return $this->metadata;
     }
@@ -210,11 +210,11 @@ class FileEntry
     /**
      * Set metadata.
      *
-     * @param array $metadata The new value.
+     * @param array|null $metadata The new value.
      *
      * @return FileEntry
      */
-    public function setMetadata($metadata)
+    public function setMetadata(?array $metadata): self
     {
         $this->metadata = $metadata;
 
@@ -228,7 +228,7 @@ class FileEntry
      *
      * @return FileEntry
      */
-    public function setPermissions($permissions)
+    public function setPermissions($permissions): self
     {
         $this->flags = (($this->flags & 0xFFFFFE00) | ($permissions & 0x000001FF));
 
@@ -240,7 +240,7 @@ class FileEntry
      *
      * @return int
      */
-    public function getPermissions()
+    public function getPermissions(): int
     {
         return ($this->flags & 0x000001FF);
     }
@@ -250,9 +250,9 @@ class FileEntry
      *
      * @return int
      */
-    public function getCompression()
+    public function getCompression(): int
     {
-        return ($this->flags & (\Phar::GZ | \Phar::BZ2));
+        return ($this->flags & (Phar::GZ | Phar::BZ2));
     }
 
     /**
@@ -260,9 +260,9 @@ class FileEntry
      *
      * @return bool
      */
-    public function isGzCompressed()
+    public function isGzCompressed(): bool
     {
-        return (bool) ($this->flags & \Phar::GZ);
+        return (bool) ($this->flags & Phar::GZ);
     }
 
     /**
@@ -270,9 +270,9 @@ class FileEntry
      *
      * @return bool
      */
-    public function isBz2Compressed()
+    public function isBz2Compressed(): bool
     {
-        return (bool) ($this->flags & \Phar::BZ2);
+        return (bool) ($this->flags & Phar::BZ2);
     }
 
     /**
@@ -282,12 +282,12 @@ class FileEntry
      *
      * @return void
      *
-     * @throws \InvalidArgumentException When the compression flag does match neither \Phar::GZ nor \Phar::BZ2.
+     * @throws InvalidArgumentException When the compression flag does match neither \Phar::GZ nor \Phar::BZ2.
      */
-    public function setCompression($flag)
+    public function setCompression($flag): void
     {
-        if ((0 !== $flag) && (0 === ($flag & (\Phar::GZ | \Phar::BZ2)))) {
-            throw new \InvalidArgumentException('Invalid compression value passed.');
+        if ((0 !== $flag) && (0 === ($flag & (Phar::GZ | Phar::BZ2)))) {
+            throw new InvalidArgumentException('Invalid compression value passed.');
         }
 
         $this->flags = (($this->flags & 0xFFFFCFFF) | $flag);
@@ -298,7 +298,7 @@ class FileEntry
      *
      * @return string
      */
-    public function getPermissionString()
+    public function getPermissionString(): string
     {
         $permissions = $this->getPermissions();
 
@@ -313,7 +313,7 @@ class FileEntry
      *
      * @return int
      */
-    public function getFlags()
+    public function getFlags(): int
     {
         return $this->flags;
     }
@@ -321,9 +321,9 @@ class FileEntry
     /**
      * Retrieve uncompressed size.
      *
-     * @return mixed
+     * @return int
      */
-    public function getSizeUncompressed()
+    public function getSizeUncompressed(): int
     {
         return $this->sizeUncompressed;
     }
@@ -331,9 +331,9 @@ class FileEntry
     /**
      * Retrieve compressed size.
      *
-     * @return mixed
+     * @return int
      */
-    public function getSizeCompressed()
+    public function getSizeCompressed(): int
     {
         if (0 === $this->getCompression()) {
             return $this->getSizeUncompressed();
@@ -350,9 +350,9 @@ class FileEntry
     /**
      * Retrieve Crc32 checksum.
      *
-     * @return string
+     * @return int
      */
-    public function getCrc()
+    public function getCrc(): int
     {
         if (!isset($this->crc)) {
             $this->crc = crc32($this->getContent());
@@ -364,9 +364,9 @@ class FileEntry
     /**
      * Retrieve timestamp.
      *
-     * @return \DateTime
+     * @return DateTime
      */
-    public function getTime()
+    public function getTime(): DateTime
     {
         return $this->timestamp;
     }
@@ -376,27 +376,30 @@ class FileEntry
      *
      * @return string
      *
-     * @throws \LogicException When the Compression algorithm is invalid.
+     * @throws LogicException When the Compression algorithm is invalid.
      *
-     * @throws \RuntimeException When the CRC is invalid.
+     * @throws RuntimeException When the CRC is invalid.
      */
-    public function getContent()
+    public function getContent(): string
     {
+        assert(is_string($this->content));
         if (!isset($this->uncompressedContent)) {
             // Decompress the content now.
             if ($this->isBz2Compressed()) {
+                $this->assertExtBzip2Loaded();
                 $content = bzdecompress($this->content);
             } elseif ($this->isGzCompressed()) {
+                $this->assertExtGzLoaded();
                 $content = gzinflate($this->content, $this->sizeUncompressed);
             }
 
             if (!isset($content)) {
-                throw new \LogicException('Unable to determine uncompressed content of file ' . $this->getFilename());
+                throw new LogicException('Unable to determine uncompressed content of file ' . $this->getFilename());
             }
 
             // Check the crc now.
             if (isset($this->crc) && (crc32($content) !== $this->crc)) {
-                throw new \RuntimeException('CRC mismatch while decompressing ' . $this->getFilename());
+                throw new RuntimeException('CRC mismatch while decompressing ' . $this->getFilename());
             }
 
             return $this->uncompressedContent = $content;
@@ -410,10 +413,11 @@ class FileEntry
      *
      * @return string
      *
-     * @throws \LogicException When the Compression algorithm is invalid.
+     * @throws LogicException When the Compression algorithm is invalid.
      */
-    public function getCompressedContent()
+    public function getCompressedContent(): string
     {
+        assert(is_string($this->uncompressedContent));
         if (0 === $this->getCompression()) {
             return $this->uncompressedContent;
         }
@@ -421,14 +425,16 @@ class FileEntry
         if (!isset($this->content)) {
             // Compress the content now.
             if ($this->isBz2Compressed()) {
+                $this->assertExtBzip2Loaded();
                 $content = bzcompress($this->uncompressedContent);
             }
             if ($this->isGzCompressed()) {
+                $this->assertExtGzLoaded();
                 $content = gzdeflate($this->uncompressedContent, 9);
             }
 
             if (!isset($content)) {
-                throw new \LogicException('Compressed file but it has no content.');
+                throw new LogicException('Compressed file but it has no content.');
             }
 
             $this->sizeCompressed = strlen($content);
@@ -445,7 +451,7 @@ class FileEntry
      *
      * @return FileEntry
      */
-    public function setContent($content)
+    public function setContent($content): self
     {
         $this->uncompressedContent = $content;
         $this->sizeUncompressed    = strlen($content);
@@ -463,11 +469,39 @@ class FileEntry
      *
      * @return string
      */
-    private function decodePermissionNibble($nibble)
+    private function decodePermissionNibble($nibble): string
     {
         return
             (($nibble & 0x4) ? 'r' : '-') .
             (($nibble & 0x2) ? 'w' : '-') .
             (($nibble & 0x1) ? 'x' : '-');
+    }
+
+    /**
+     * Assert that the bz2 extension is loaded in php.
+     *
+     * @return void
+     *
+     * @throws RuntimeException If the extension is not loaded.
+     */
+    private function assertExtBzip2Loaded(): void
+    {
+        if (!function_exists('bzcompress')) {
+            throw new RuntimeException('Need extension bz2 for gzip compression in phars');
+        }
+    }
+
+    /**
+     * Assert that the gzip extension is loaded in php.
+     *
+     * @return void
+     *
+     * @throws RuntimeException If the extension is not loaded.
+     */
+    private function assertExtGzLoaded(): void
+    {
+        if (!function_exists('gzdeflate')) {
+            throw new RuntimeException('Need extension zlib for gzip compression in phars');
+        }
     }
 }

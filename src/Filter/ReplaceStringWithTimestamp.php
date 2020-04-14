@@ -51,7 +51,7 @@ class ReplaceStringWithTimestamp extends AbstractFilter
      *
      * @param array $config The configuration.
      */
-    public function __construct($config)
+    public function __construct(array $config)
     {
         $this->search = $config['search'];
         $this->format = $config['format'];
@@ -61,9 +61,9 @@ class ReplaceStringWithTimestamp extends AbstractFilter
     /**
      * {@inheritDoc}
      */
-    public function apply($content)
+    public function apply(string $content): string
     {
-        $value = str_replace('@@warning_time@@', (time() + $this->ahead), $this->format);
+        $value = str_replace('@@warning_time@@', (string) (time() + $this->ahead), $this->format);
 
         return str_replace($this->search, $value, $content);
     }

@@ -22,6 +22,8 @@ namespace CyberSpectrum\PharPiler;
 
 use CyberSpectrum\PharPiler\Phar\FileEntry;
 use CyberSpectrum\PharPiler\Phar\Pharchive;
+use InvalidArgumentException;
+use LogicException;
 
 /**
  * This class mimics the base \Phar class with neat operations.
@@ -38,7 +40,7 @@ class Phar
     /**
      * The filter handler to use.
      *
-     * @var Filter
+     * @var Filter|null
      */
     private $filters;
 
@@ -61,7 +63,7 @@ class Phar
      *
      * @link http://php.net/manual/en/phar.construct.php
      */
-    public function __construct($fname, Filter $filters = null, $alias = null)
+    public function __construct(string $fname, Filter $filters = null, string $alias = null)
     {
         $this->fname = $fname;
 
@@ -76,7 +78,7 @@ class Phar
      *
      * @return Pharchive
      */
-    public function getPharchive()
+    public function getPharchive(): Pharchive
     {
         return $this->pharchive;
     }
@@ -87,9 +89,15 @@ class Phar
      * @param string $stubFile Full or relative path to a file on disk to be added to the phar archive.
      *
      * @return void
+     *
+     * @throws LogicException When no filters are present.
      */
-    public function setStubFromFileFiltered($stubFile)
+    public function setStubFromFileFiltered(string $stubFile): void
     {
+        if (null === $this->filters) {
+            throw new LogicException('No filters available.');
+        }
+
         $this->pharchive->setStub($this->filters->process($stubFile, file_get_contents($stubFile)));
     }
 
@@ -102,18 +110,18 @@ class Phar
      *
      * @return void
      *
-     * @throws \LogicException When no filters are present.
+     * @throws LogicException When no filters are present.
      *
-     * @throws \InvalidArgumentException When the source file could not be found.
+     * @throws InvalidArgumentException When the source file could not be found.
      */
-    public function addFileFiltered($file, $localName = null)
+    public function addFileFiltered(string $file, string $localName = null): void
     {
-        if (!isset($this->filters)) {
-            throw new \LogicException('No filters available.');
+        if (null === $this->filters) {
+            throw new LogicException('No filters available.');
         }
 
         if (!is_file($file)) {
-            throw new \InvalidArgumentException('File not found ' . $file);
+            throw new InvalidArgumentException('File not found ' . $file);
         }
 
         $this->addFromString($localName ?: $file, $this->filters->process($file, file_get_contents($file)));
@@ -128,12 +136,12 @@ class Phar
      *
      * @return void
      *
-     * @throws \LogicException When no filters are present.
+     * @throws LogicException When no filters are present.
      */
-    public function addFromStringFiltered($localPath, $content)
+    public function addFromStringFiltered(string $localPath, string $content): void
     {
-        if (!isset($this->filters)) {
-            throw new \LogicException('No filters available.');
+        if (null === $this->filters) {
+            throw new LogicException('No filters available.');
         }
 
         $this->addFromString($localPath, $this->filters->process($localPath, $content));
@@ -144,7 +152,7 @@ class Phar
      *
      * @return string[]
      */
-    public function getFileList()
+    public function getFileList(): array
     {
         return array_map(
             function (FileEntry $file) {
@@ -157,13 +165,13 @@ class Phar
     /**
      * Add a file to the phar.
      *
-     * @param string      $file      The path to the file.
+     * @param string $file      The path to the file.
      *
-     * @param null|string $localName The local name of the file to use.
+     * @param string $localName The local name of the file to use.
      *
      * @return FileEntry
      */
-    public function addFile($file, $localName = null)
+    public function addFile(string $file, string $localName): FileEntry
     {
         $add = new FileEntry();
         $add
@@ -184,7 +192,7 @@ class Phar
      *
      * @return FileEntry
      */
-    public function addFromString($localName, $contents)
+    public function addFromString(string $localName, string $contents)
     {
         $add = new FileEntry();
         $add
@@ -203,7 +211,7 @@ class Phar
      *
      * @return void
      */
-    public function delete($localName)
+    public function delete(string $localName)
     {
         foreach ($this->pharchive->getFiles() as $file) {
             if ($localName === $file->getFilename()) {
@@ -220,7 +228,7 @@ class Phar
      *
      * @return void
      */
-    public function compressFiles($algorithm)
+    public function compressFiles(int $algorithm)
     {
         foreach ($this->pharchive->getFiles() as $file) {
             $file->setCompression($algorithm);

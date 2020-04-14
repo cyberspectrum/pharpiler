@@ -26,6 +26,9 @@ use CyberSpectrum\PharPiler\Phar\PharReader;
 use CyberSpectrum\PharPiler\Phar\PharWriter;
 use CyberSpectrum\PharPiler\Tests\TestCase;
 
+/**
+ * @covers \CyberSpectrum\PharPiler\Phar\PharWriter
+ */
 class PharWriterTest extends TestCase
 {
     /**
@@ -43,7 +46,7 @@ class PharWriterTest extends TestCase
             'sha512' => \Phar::SHA512
             /* 'openssl' => \Phar::OPENSSL*/
         ];
-        $result       = [];
+        $result = [];
         foreach ($compressions as $compression) {
             foreach ($signatures as $name => $flag) {
                 $result[] = [$compression, $name, $flag];
@@ -65,8 +68,7 @@ class PharWriterTest extends TestCase
         $pharfile = $this->getTempFile('temp.phar');
 
         $phar = new Pharchive();
-        $phar->setStub(
-            $stubData=<<<EOF
+        $phar->setStub(<<<EOF
 #!/usr/bin/php
 <?php
 
@@ -120,12 +122,16 @@ EOF
      */
     public function testWriteLoaded($compression, $signatureFlag)
     {
+        if (ini_get('phar.readonly')) {
+            $this->markTestSkipped('Test disabled by the php.ini setting phar.readonly');
+        }
+
         $pharfile = $this->getTempFile('temp.phar');
 
         $phar = new \Phar($pharfile, 0, 'temp.phar');
         $phar->startBuffering();
 
-        $phar->addFromString('/bin/script', $fileData=<<<EOF
+        $phar->addFromString('/bin/script', <<<EOF
 #!/usr/bin/php
 <?php
 echo 'hello world';
@@ -145,7 +151,7 @@ EOF
         unset($phar);
 
         $reader = new PharReader();
-        $phar = $reader->load($pharfile);
+        $phar   = $reader->load($pharfile);
 
         $pharfile2 = $this->getTempFile('temp.phar');
 

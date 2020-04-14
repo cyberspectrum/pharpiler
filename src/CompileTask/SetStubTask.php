@@ -44,6 +44,7 @@ class SetStubTask extends AbstractTask
      */
     public function __construct($config)
     {
+        parent::__construct();
         if (!(isset($config['stub_file']) && is_file($config['stub_file']))) {
             throw new \RuntimeException('Stub file does not exist.');
         }
@@ -54,7 +55,7 @@ class SetStubTask extends AbstractTask
     /**
      * {@inheritDoc}
      */
-    public function execute(Project $project)
+    public function execute(Project $project): void
     {
         $this->debug(
             sprintf(
