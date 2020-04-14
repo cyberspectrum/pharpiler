@@ -119,7 +119,7 @@ PSR4;
 INCLUDEPATH;
         }
 
-        $file .= '        $loader->register(true);';
+        $file .= "        \$loader->register(true);\n";
 
         if ($autoLoadFiles = $this->optimizer->getAutoloadFiles()) {
             foreach ($autoLoadFiles as $autoLoadFile) {
