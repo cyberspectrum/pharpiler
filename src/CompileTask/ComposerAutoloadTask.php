@@ -116,7 +116,7 @@ class ComposerAutoloadTask extends AbstractTask
         $optimizer = AutoloadInformationOptimizer::create($phar->getFileList(), $root);
         $dumper    = new AutoloadDumper($optimizer);
 
-        $phar->addFromString('/vendor/composer/autoload_real.php', $dumper->getAutoloadReal());
-        $phar->addFromString('/vendor/autoload.php', $dumper->getAutoload());
+        $phar->addFromStringFiltered('/vendor/composer/autoload_real.php', $dumper->getAutoloadReal());
+        $phar->addFromStringFiltered('/vendor/autoload.php', $dumper->getAutoload());
     }
 }
