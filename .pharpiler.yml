@@ -44,7 +44,7 @@ rewrites:
       - '%package:cyberspectrum/pharpiler%/bin/pharpiler'
     filter:
       - type: replace
-        "@@MIN_PHP_VERSION@@": "5.5"
+        "@@MIN_PHP_VERSION@@": "7.3"
       - type: replace
         "@@PHARPILER_VERSION@@": '%version:cyberspectrum/pharpiler%'
       - type: warning-time
