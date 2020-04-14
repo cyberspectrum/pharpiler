@@ -382,8 +382,8 @@ class FileEntry
      */
     public function getContent(): string
     {
-        assert(is_string($this->content));
         if (!isset($this->uncompressedContent)) {
+            assert(is_string($this->content));
             // Decompress the content now.
             if ($this->isBz2Compressed()) {
                 $this->assertExtBzip2Loaded();
