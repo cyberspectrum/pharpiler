@@ -22,7 +22,7 @@ before_install:
   - echo "memory_limit = -1" > travis.php.ini && phpenv config-add travis.php.ini
   # interim solution until phpcq/phpcq:2.0 has been released.
   - git clone -b dev-2.0 https://github.com/phpcq/phpcq.git phpcq
-  - cd phpcq && composer install
+  - (cd phpcq && composer install)
 
 install:
   - travis_retry composer self-update && composer --version
