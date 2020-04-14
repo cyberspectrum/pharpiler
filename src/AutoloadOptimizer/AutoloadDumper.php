@@ -81,9 +81,9 @@ class ComposerAutoloaderInit{$this->alias}
         \$baseDir = \Phar::running();
         \$vendorDir = \$baseDir . '/vendor';
 
-        spl_autoload_register(array('ComposerAutoloaderInit{$this->alias}', 'loadClassLoader'), true, true);
+        spl_autoload_register(['ComposerAutoloaderInit{$this->alias}', 'loadClassLoader'], true, true);
         self::\$loader = \$loader = new \Composer\Autoload\ClassLoader();
-        spl_autoload_unregister(array('ComposerAutoloaderInit{$this->alias}', 'loadClassLoader'));
+        spl_autoload_unregister(['ComposerAutoloaderInit{$this->alias}', 'loadClassLoader']);
 
 HEADER;
 
