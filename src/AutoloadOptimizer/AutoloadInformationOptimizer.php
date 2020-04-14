@@ -196,7 +196,7 @@ class AutoloadInformationOptimizer
      */
     public function getIncludePaths(): array
     {
-        return $this->filterPaths($this->includePaths);
+        return $this->removePrefix($this->includePaths);
     }
 
     /**
@@ -206,7 +206,7 @@ class AutoloadInformationOptimizer
      */
     public function getAutoloadFiles(): array
     {
-        return $this->filterPaths($this->autoloadFiles);
+        return $this->removePrefix($this->autoloadFiles);
     }
 
     /**
@@ -243,32 +243,6 @@ class AutoloadInformationOptimizer
             }
 
             $result[$key] = $value;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Filter the passed path list against the white list.
-     *
-     * @param string[] $paths The paths to filter.
-     *
-     * @return array
-     */
-    private function filterPaths(array $paths): array
-    {
-        $result = [];
-        foreach ($paths as $value) {
-            $value = str_replace('\\', '/', realpath($value));
-            if (empty($value)) {
-                continue;
-            }
-
-            if (!isset($this->whitelist[$value])) {
-                continue;
-            }
-
-            $result[] = $value;
         }
 
         return $result;

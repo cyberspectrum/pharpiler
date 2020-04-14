@@ -123,7 +123,7 @@ INCLUDEPATH;
 
         if ($autoLoadFiles = $this->optimizer->getAutoloadFiles()) {
             foreach ($autoLoadFiles as $autoLoadFile) {
-                $file .= sprintf("composerRequire%s(%s);\n", $this->alias, $autoLoadFile);
+                $file .= sprintf("composerRequire%s(%s);\n", $this->alias, $this->valueToString($autoLoadFile));
             }
         }
 
