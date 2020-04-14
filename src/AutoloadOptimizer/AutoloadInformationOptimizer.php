@@ -21,6 +21,7 @@
 namespace CyberSpectrum\PharPiler\AutoloadOptimizer;
 
 use Composer\Autoload\ClassLoader;
+use Phar;
 
 /**
  * This class optimizes the information of the composer autoloader for the contents of a phar file.
@@ -99,7 +100,7 @@ class AutoloadInformationOptimizer
          * @var ClassLoader $projectLoader
          */
         $projectLoader = require $vendorDir . '/autoload.php';
-        if (\Phar::running()) {
+        if (class_exists('Phar') && Phar::running()) {
             $projectLoader->unregister();
         }
 

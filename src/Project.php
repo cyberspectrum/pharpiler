@@ -22,6 +22,7 @@ namespace CyberSpectrum\PharPiler;
 
 use CyberSpectrum\PharPiler\Composer\ComposerInformation;
 use CyberSpectrum\PharPiler\Configuration\ConfigurationValues;
+use CyberSpectrum\PharPiler\Phar;
 use CyberSpectrum\PharPiler\Phar\PharWriter;
 
 /**
@@ -72,7 +73,7 @@ class Project
     {
         $pharFile = $configuration->get('phar');
         assert(is_string($pharFile));
-        if (!\Phar::isValidPharFilename($pharFile)) {
+        if (class_exists('Phar') && !\Phar::isValidPharFilename($pharFile)) {
             throw new \RuntimeException('Phar file name is invalid ' . $pharFile);
         }
 
@@ -84,7 +85,7 @@ class Project
         $this->configuration = $configuration;
         $this->filters       = $filters;
         $this->phar          = new Phar($pharFile, $filters);
-        $this->phar->getPharchive()->setSignatureFlags(\Phar::MD5);
+        $this->phar->getPharchive()->setSignatureFlags(Phar::MD5);
         $this->phar->getPharchive()->setMetadata(
             array(
                 'license' => file_get_contents(dirname($pharFile) . '/LICENSE')
@@ -99,8 +100,7 @@ class Project
      */
     public function finalize(): void
     {
-        // disabled for interoperability with systems without gzip ext
-        $this->phar->compressFiles(\Phar::GZ);
+        $this->phar->compressFiles(Phar::GZ);
 
         $filename = $this->configuration->get('phar');
         assert(is_string($filename));

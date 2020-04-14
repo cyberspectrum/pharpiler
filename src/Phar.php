@@ -30,6 +30,21 @@ use LogicException;
  */
 class Phar
 {
+    const BZ2        = 8192;
+    const GZ         = 4096;
+    const NONE       = 0;
+    const PHAR       = 1;
+    const TAR        = 2;
+    const ZIP        = 3;
+    const COMPRESSED = 61440;
+    const PHP        = 0;
+    const PHPS       = 1;
+    const MD5        = 1;
+    const OPENSSL    = 16;
+    const SHA1       = 2;
+    const SHA256     = 3;
+    const SHA512     = 4;
+
     /**
      * The file name.
      *

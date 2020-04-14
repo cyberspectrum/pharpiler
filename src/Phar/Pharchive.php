@@ -20,8 +20,8 @@
 
 namespace CyberSpectrum\PharPiler\Phar;
 
+use CyberSpectrum\PharPiler\Phar;
 use OutOfBoundsException;
-use Phar;
 use RuntimeException;
 
 /**

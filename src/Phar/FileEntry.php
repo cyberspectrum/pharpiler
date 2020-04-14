@@ -20,10 +20,10 @@
 
 namespace CyberSpectrum\PharPiler\Phar;
 
+use CyberSpectrum\PharPiler\Phar;
 use DateTime;
 use InvalidArgumentException;
 use LogicException;
-use Phar;
 use RuntimeException;
 
 /**
